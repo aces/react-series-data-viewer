@@ -7,7 +7,7 @@ import { Container, Row, Col, Input, ButtonGroup, Button } from "reactstrap";
 import { Group } from "@vx/vx";
 import { connect } from "react-redux";
 import { scaleLinear } from "d3-scale";
-import { DEFUALT_VIEW_BOUNDS, MAX_RENDERED_EPOCHS } from "src/vector";
+import { DEFAULT_VIEW_BOUNDS, MAX_RENDERED_EPOCHS } from "src/vector";
 import ResponsiveViewer from "./ResponsiveViewer";
 import DefaultOrthoCamera from "./DefaultOrthoCamera";
 import Object2D from "./Object2D";
@@ -55,13 +55,13 @@ const SeriesRenderer = ({
   limit
 }: Props) => {
   const topLeft = vec2.fromValues(
-    DEFUALT_VIEW_BOUNDS.x[0],
-    DEFUALT_VIEW_BOUNDS.y[1]
+    DEFAULT_VIEW_BOUNDS.x[0],
+    DEFAULT_VIEW_BOUNDS.y[1]
   );
 
   const bottomRight = vec2.fromValues(
-    DEFUALT_VIEW_BOUNDS.x[1],
-    DEFUALT_VIEW_BOUNDS.y[0]
+    DEFAULT_VIEW_BOUNDS.x[1],
+    DEFAULT_VIEW_BOUNDS.y[0]
   );
 
   const diagonal = vec2.create();
@@ -76,7 +76,7 @@ const SeriesRenderer = ({
       .domain(interval)
       .range([topLeft[0], bottomRight[0]]),
     scaleLinear()
-      .domain(DEFUALT_VIEW_BOUNDS.y)
+      .domain(DEFAULT_VIEW_BOUNDS.y)
       .range([topLeft[1], bottomRight[1]])
   ];
 
@@ -282,7 +282,7 @@ const SeriesRenderer = ({
                 />
               )}
               <ResponsiveViewer
-                transparent
+                transparent={true}
                 activeCamera="maincamera"
                 mouseMove={R.compose(
                   setCursor,
@@ -340,6 +340,7 @@ export default connect(
     seriesRange: state.dataset.seriesRange,
     offsetIndex: state.dataset.offsetIndex
   }),
+  
   (dispatch: any => void) => ({
     setOffsetIndex: R.compose(
       dispatch,

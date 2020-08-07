@@ -3,13 +3,12 @@
 import * as R from "ramda";
 import React from "react";
 import type { Node } from "react";
-import { Renderer, Scene } from "react-three";
+import { Canvas } from "react-three-fiber";
 import { scaleLinear } from "d3-scale";
 import "resize-observer-polyfill/dist/ResizeObserver.global";
 // $FlowFixMe
 import withResizeObserverProps from "@hocs/with-resize-observer-props";
-import Object2D from "./Object2D";
-import { DEFUALT_VIEW_BOUNDS } from "src/vector";
+import { DEFAULT_VIEW_BOUNDS } from "src/vector";
 import type { Vector2 } from "src/vector";
 
 type Props = {
@@ -50,11 +49,11 @@ const ResponsiveViewer = ({
   const eventScale = [
     scaleLinear()
       .domain([0, 1])
-      .range(DEFUALT_VIEW_BOUNDS.x),
+      .range(DEFAULT_VIEW_BOUNDS.x),
 
     scaleLinear()
       .domain([0, 1])
-      .range(DEFUALT_VIEW_BOUNDS.y)
+      .range(DEFAULT_VIEW_BOUNDS.y)
   ];
 
   const eventToPosition = e => {
@@ -88,23 +87,22 @@ const ResponsiveViewer = ({
         eventToPosition
       )}*/
     >
-      <Renderer
+      <Canvas
         style={{ position: "absolute" }}
-        transparent
+        transparent={transparent.toString()}
         width={width}
         height={height}
       >
         {threeLayers.length > 0 && (
-          <Scene
+          <scene
             pointerEvents={["onMouseDown", "onMouseMove", "onMouseUp"]}
             width={width}
             height={height}
-            camera={activeCamera}
           >
             {threeLayers}
-          </Scene>
+          </scene>
         )}
-      </Renderer>
+      </Canvas>
       <svg
         style={{ position: "absolute", pointerEvents: "none" }}
         width={width}

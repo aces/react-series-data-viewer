@@ -71,6 +71,7 @@ class EEGLabSeriesProvider extends Component {
       epochsTableURLs instanceof Array ? epochsTableURLs : [epochsTableURLs];
 
     Promise.race(racers(fetchText, epochUrls)).then(text => {
+      if (!(typeof text.json === 'string' || text.json instanceof String)) return;
       this.store.dispatch(
         setEpochs(
           tsvParse(text.json).map(({ onset, duration, trial_type }) => ({

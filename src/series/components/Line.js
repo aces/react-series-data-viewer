@@ -2,7 +2,6 @@
 
 import * as R from "ramda";
 import React from "react";
-import { Line as THREELine } from "react-three";
 import * as THREE from "three";
 import type { Vector2 } from "src/vector";
 
@@ -43,7 +42,7 @@ const Line = ({ cacheKey, points, linewidth, color }: Props) => {
     ? lineMaterialMemo({ cacheKey, linewidth, color })
     : lineMaterial({ linewidth, color });
 
-  return <THREELine geometry={geometry} material={material} />;
+  return <line geometry={geometry} material={material} />;
 };
 
 Line.defaultProps = {

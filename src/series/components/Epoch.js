@@ -4,7 +4,7 @@ import { vec2 } from "gl-matrix";
 import React from "react";
 import * as THREE from "three";
 import Rectangle from "./Rectangle";
-import { MIN_EPOCH_WIDTH, DEFUALT_VIEW_BOUNDS } from "src/vector";
+import { MIN_EPOCH_WIDTH, DEFAULT_VIEW_BOUNDS } from "src/vector";
 
 type Props = {
   onset: number,
@@ -18,12 +18,12 @@ type Props = {
 const Epoch = ({ onset, duration, type, scales, color, opacity }: Props) => {
   const p0 = vec2.fromValues(
     scales[0](onset),
-    scales[1](DEFUALT_VIEW_BOUNDS.y[0])
+    scales[1](DEFAULT_VIEW_BOUNDS.y[0])
   );
 
   const p1 = vec2.fromValues(
     scales[0](onset + duration) + MIN_EPOCH_WIDTH,
-    scales[1](DEFUALT_VIEW_BOUNDS.y[1])
+    scales[1](DEFAULT_VIEW_BOUNDS.y[1])
   );
 
   return (

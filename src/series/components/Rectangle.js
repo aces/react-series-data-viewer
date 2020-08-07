@@ -3,7 +3,6 @@
 import * as R from "ramda";
 import { vec2 } from "gl-matrix";
 import React from "react";
-import { Mesh } from "react-three";
 import * as THREE from "three";
 import type { Vector2 } from "src/vector";
 import Object2D from "./Object2D";
@@ -18,7 +17,7 @@ const RectMesh = ({ color, opacity, ...rest }) => {
     side: THREE.DoubleSide
   });
 
-  return <Mesh geometry={geometry} material={material} {...rest} />;
+  return <mesh geometry={geometry} material={material} {...rest} />;
 };
 
 const RectMeshMemo = R.memoizeWith(

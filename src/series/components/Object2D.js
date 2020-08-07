@@ -3,7 +3,6 @@
 import { vec2 } from "gl-matrix";
 import React from "react";
 import type { Node } from "react";
-import { Object3D } from "react-three";
 import * as THREE from "three";
 import type { Vector2 } from "src/vector";
 
@@ -15,7 +14,7 @@ type Props = {
 
 const Object2D = ({ position, layer, children, ...objectProps }: Props) => {
   return (
-    <Object3D
+    <object3D
       position={new THREE.Vector3().fromArray([
         position[0],
         position[1],
@@ -24,7 +23,7 @@ const Object2D = ({ position, layer, children, ...objectProps }: Props) => {
       {...objectProps}
     >
       {children}
-    </Object3D>
+    </object3D>
   );
 };
 

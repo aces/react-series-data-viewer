@@ -7,7 +7,7 @@ import { Group } from "@vx/vx";
 import { connect } from "react-redux";
 import * as THREE from "three";
 import { scaleLinear } from "d3-scale";
-import { DEFUALT_VIEW_BOUNDS } from "src/vector";
+import { DEFAULT_VIEW_BOUNDS } from "src/vector";
 import {
   startDragInterval,
   continueDragInterval,
@@ -36,19 +36,19 @@ const IntervalSelect = ({
   dragEnd
 }: Props) => {
   const topLeft = vec2.fromValues(
-    DEFUALT_VIEW_BOUNDS.x[0],
-    DEFUALT_VIEW_BOUNDS.y[1]
+    DEFAULT_VIEW_BOUNDS.x[0],
+    DEFAULT_VIEW_BOUNDS.y[1]
   );
   const bottomRight = vec2.fromValues(
-    DEFUALT_VIEW_BOUNDS.x[1],
-    DEFUALT_VIEW_BOUNDS.y[0]
+    DEFAULT_VIEW_BOUNDS.x[1],
+    DEFAULT_VIEW_BOUNDS.y[0]
   );
   const center = vec2.create();
   vec2.add(center, topLeft, bottomRight);
   vec2.scale(center, center, 1 / 2);
   const scale = scaleLinear()
     .domain(domain)
-    .range(DEFUALT_VIEW_BOUNDS.x);
+    .range(DEFAULT_VIEW_BOUNDS.x);
   const ySlice = x => ({
     p0: vec2.fromValues(x, topLeft[1]),
     p1: vec2.fromValues(x, bottomRight[1])
@@ -77,7 +77,7 @@ const IntervalSelect = ({
 
   return (
     <ResponsiveViewer
-      transparent
+      transparent={true}
       activeCamera="maincamera"
       mouseDown={R.compose(
         dragStart,

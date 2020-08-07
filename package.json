@@ -12,7 +12,7 @@
     "umd"
   ],
   "scripts": {
-    "build": "nwb build-react-component",
+    "build": "nwb build-react-component --no-demo",
     "clean": "nwb clean-module && nwb clean-demo",
     "prepublishOnly": "npm run build",
     "deploy": "npm run build && gh-pages -d demo/dist",
@@ -39,8 +39,8 @@
     "immutable": "^3.8.2",
     "prop-types": "^15.6.2",
     "ramda": "^0.25.0",
-    "react-redux": "^5.0.7",
-    "react-three": "^0.9.7",
+    "react-redux": "^7.2.1",
+    "react-three-fiber": "^4.1.10",
     "reactstrap": "^6.5.0",
     "recompose": "^0.30.0",
     "redux": "^4.0.0",
@@ -50,15 +50,13 @@
     "redux-thunk": "^2.3.0",
     "resize-observer-polyfill": "^1.5.0",
     "rxjs": "^6.3.3",
-    "three": "^0.83.0"
-  },
-  "peerDependencies": {
-    "react": "16.x"
+    "three": "^0.119.1"
   },
   "devDependencies": {
-    "babel-eslint": "^9.0.0",
+    "babel-eslint": "^10.0.1",
     "babel-plugin-flow-react-proptypes": "^24.1.2",
     "babel-plugin-module-resolver": "^3.1.1",
+    "drei": "^1.3.0",
     "eslint": "^5.7.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-config-react-app": "^3.0.4",
@@ -72,8 +70,9 @@
     "gh-pages": "^2.0.1",
     "nwb": "0.23.x",
     "prettier": "^1.12.1",
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1"
+    "prop-types": "^15.7.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
   },
   "author": "",
   "license": "MIT",
