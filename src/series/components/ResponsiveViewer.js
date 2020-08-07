@@ -75,18 +75,18 @@ const ResponsiveViewer = ({
     <div
       ref={onRef}
       style={{ width: "100%", height: "100%" }}
-      onMouseDown={R.compose(
+      /*onMouseDown={R.compose(
         mouseDown,
         eventToPosition
-      )}
+      )}*/
       onMouseMove={R.compose(
         mouseMove,
         eventToPosition
       )}
-      onMouseUp={R.compose(
+      /*onMouseUp={R.compose(
         mouseUp,
         eventToPosition
-      )}
+      )}*/
     >
       <Renderer
         style={{ position: "absolute" }}
