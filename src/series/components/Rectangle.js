@@ -1,28 +1,28 @@
 // @flow
 
-import * as R from "ramda";
-import { vec2 } from "gl-matrix";
-import React from "react";
-import * as THREE from "three";
-import type { Vector2 } from "src/vector";
-import Object2D from "./Object2D";
+import * as R from 'ramda';
+import {vec2} from 'gl-matrix';
+import React from 'react';
+import * as THREE from 'three';
+import type {Vector2} from 'src/vector';
+import Object2D from './Object2D';
 
-const RectMesh = ({ color, opacity, ...rest }) => {
+const RectMesh = ({color, opacity, ...rest}) => {
   const geometry = new THREE.PlaneGeometry(1, 1);
   const material = new THREE.MeshBasicMaterial({
     color,
     opacity,
     transparent: true,
     premultipliedAlpha: true,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
   });
 
   return <mesh geometry={geometry} material={material} {...rest} />;
 };
 
 const RectMeshMemo = R.memoizeWith(
-  ({ cacheKey }) => cacheKey,
-  props => <RectMesh {...props} />
+  ({cacheKey}) => cacheKey,
+  (props) => <RectMesh {...props} />
 );
 
 type Props = {
@@ -65,8 +65,8 @@ const Rectangle = ({
 };
 
 Rectangle.defaultProps = {
-  color: new THREE.Color("#000"),
-  opacity: 1.0
+  color: new THREE.Color('#000'),
+  opacity: 1.0,
 };
 
 export default Rectangle;

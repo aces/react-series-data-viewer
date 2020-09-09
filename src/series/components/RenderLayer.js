@@ -1,8 +1,6 @@
 // @flow
 
-import React from "react";
-import type { Node } from "react";
-import Object2D from "./Object2D";
+import type {Node} from 'react';
 
 export type Props = {
   svg?: boolean,
@@ -10,7 +8,7 @@ export type Props = {
   children?: Node
 };
 
-const RenderLayer = ({ children }: Props) => {
+const RenderLayer = ({children}: Props) => {
   return children;
 };
 

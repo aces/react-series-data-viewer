@@ -1,24 +1,23 @@
 // @flow
 
-import * as R from "ramda";
-import { vec2 } from "gl-matrix";
-import React from "react";
-import { Group } from "@vx/vx";
-import { connect } from "react-redux";
-import * as THREE from "three";
-import { scaleLinear } from "d3-scale";
-import { DEFAULT_VIEW_BOUNDS } from "src/vector";
+import * as R from 'ramda';
+import {vec2} from 'gl-matrix';
+import React from 'react';
+import {Group} from '@vx/vx';
+import {connect} from 'react-redux';
+import * as THREE from 'three';
+import {scaleLinear} from 'd3-scale';
+import {DEFAULT_VIEW_BOUNDS} from '../../vector';
 import {
   startDragInterval,
   continueDragInterval,
-  endDragInterval
-} from "../store/logic/drag-bounds";
-import ResponsiveViewer from "./ResponsiveViewer";
-import RenderLayer from "./RenderLayer";
-import DefaultOrthoCamera from "./DefaultOrthoCamera";
-import Object2D from "./Object2D";
-import Axis from "./Axis";
-import Rectangle from "./Rectangle";
+  endDragInterval,
+} from '../store/logic/drag-bounds';
+import ResponsiveViewer from './ResponsiveViewer';
+import RenderLayer from './RenderLayer';
+import Object2D from './Object2D';
+import Axis from './Axis';
+import Rectangle from './Rectangle';
 
 type Props = {
   domain: [number, number],
@@ -33,7 +32,7 @@ const IntervalSelect = ({
   interval,
   dragStart,
   dragContinue,
-  dragEnd
+  dragEnd,
 }: Props) => {
   const topLeft = vec2.fromValues(
     DEFAULT_VIEW_BOUNDS.x[0],
@@ -49,36 +48,35 @@ const IntervalSelect = ({
   const scale = scaleLinear()
     .domain(domain)
     .range(DEFAULT_VIEW_BOUNDS.x);
-  const ySlice = x => ({
+  const ySlice = (x) => ({
     p0: vec2.fromValues(x, topLeft[1]),
-    p1: vec2.fromValues(x, bottomRight[1])
+    p1: vec2.fromValues(x, bottomRight[1]),
   });
-  const BackShadowLayer = ({ interval }) => (
+  const BackShadowLayer = ({interval}) => (
     <Object2D position={center} layer={1}>
       <Rectangle
-        color={new THREE.Color("#aaa")}
+        color={new THREE.Color('#aaa')}
         opacity={0.3}
         start={vec2.clone(topLeft)}
         end={ySlice(scale(interval[0])).p1}
       />
       <Rectangle
-        color={new THREE.Color("#aaa")}
+        color={new THREE.Color('#aaa')}
         opacity={0.3}
         start={ySlice(scale(interval[1])).p0}
         end={bottomRight}
       />
     </Object2D>
   );
-  const AxisLayer = ({ viewerWidth, viewerHeight, domain }) => (
+  const AxisLayer = ({viewerWidth, viewerHeight, domain}) => (
     <Group top={viewerHeight - 1}>
-      <Axis domain={domain} range={[0, viewerWidth]} orientation="top" />
+      <Axis domain={domain} range={[0, viewerWidth]} orientation='top' />
     </Group>
   );
 
   return (
     <ResponsiveViewer
       transparent={true}
-      activeCamera="maincamera"
       mouseDown={R.compose(
         dragStart,
         scale.invert,
@@ -99,7 +97,6 @@ const IntervalSelect = ({
         <AxisLayer viewerWidth={0} viewerHeight={0} domain={domain} />
       </RenderLayer>
       <RenderLayer three>
-        <DefaultOrthoCamera name="maincamera" />
         <BackShadowLayer interval={interval} />
       </RenderLayer>
     </ResponsiveViewer>
@@ -108,13 +105,13 @@ const IntervalSelect = ({
 
 IntervalSelect.defaultProps = {
   domain: [0, 1],
-  interval: [0.25, 0.75]
+  interval: [0.25, 0.75],
 };
 
 export default connect(
-  state => ({
+  (state) => ({
     domain: state.bounds.domain,
-    interval: state.bounds.interval
+    interval: state.bounds.interval,
   }),
   (dispatch: any => void) => ({
     dragStart: R.compose(
@@ -128,6 +125,6 @@ export default connect(
     dragEnd: R.compose(
       dispatch,
       endDragInterval
-    )
+    ),
   })
 )(IntervalSelect);

@@ -1,11 +1,11 @@
 // @flow
 
-import React from "react";
-import { scaleLinear } from "d3-scale";
-import { Axis as VxAxis } from "@vx/vx";
+import React from 'react';
+import {scaleLinear} from 'd3-scale';
+import {Axis as VxAxis} from '@vx/vx';
 
 type Props = {
-  orientation: "top" | "right" | "bottom" | "left",
+  orientation: 'top' | 'right' | 'bottom' | 'left',
   domain: [number, number],
   range: [number, number],
   ticks: number,
@@ -19,7 +19,7 @@ const Axis = ({
   range,
   ticks,
   padding,
-  format
+  format,
 }: Props) => {
   const scale = scaleLinear()
     .domain(domain)
@@ -39,11 +39,11 @@ const Axis = ({
 };
 
 Axis.defaultProps = {
-  direction: "bottom",
+  direction: 'bottom',
   domain: [0, 1],
   ticks: 10,
   padding: 0,
-  format: tick => `${tick}`
+  format: (tick) => `${tick}`,
 };
 
 export default Axis;

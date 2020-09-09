@@ -1,11 +1,12 @@
 // @flow
 
-import * as R from "ramda";
-import React from "react";
-import type { Node } from "react";
-import { bisector } from "d3-array";
-import { colorOrder } from "src/color";
-import type { Channel } from "../store/types";
+import * as R from 'ramda';
+import React from 'react';
+import type {Node} from 'react';
+import {bisector} from 'd3-array';
+import {colorOrder} from '../../color';
+import type {Channel} from '../store/types';
+import {DEFAULT_VIEW_BOUNDS} from '../../vector';
 
 type CursorContentProps = {
   cursor: number,
@@ -20,21 +21,21 @@ type Props = {
   CursorContent: CursorContentProps => Node
 };
 
-const SeriesCursor = ({ cursor, scale, channels, CursorContent }: Props) => {
+const SeriesCursor = ({cursor, scale, channels, CursorContent}: Props) => {
   const left = `${Math.min(
-    Math.max((100 * (scale(cursor) + 1)) / 2, 0),
+    Math.max(100 * (scale(cursor) + DEFAULT_VIEW_BOUNDS.x[1]) / (2 * DEFAULT_VIEW_BOUNDS.x[1]), 0),
     100
   )}%`;
 
   const Cursor = () => (
     <div
       style={{
-        position: "absolute",
+        position: 'absolute',
         left,
-        top: "0",
-        backgroundColor: "#000",
-        width: "1px",
-        height: "100%"
+        top: '0',
+        backgroundColor: '#000',
+        width: '1px',
+        height: '100%',
       }}
     />
   );
@@ -43,18 +44,18 @@ const SeriesCursor = ({ cursor, scale, channels, CursorContent }: Props) => {
     <div
       style={{
         left,
-        top: "0",
-        height: "100%",
-        position: "absolute",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between"
+        top: '0',
+        height: '100%',
+        position: 'absolute',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
       }}
     >
       {channels.map((channel, i) => (
         <div
           key={`${channel.index}-${channels.length}`}
-          style={{ margin: "auto" }}
+          style={{margin: 'auto'}}
         >
           <CursorContent cursor={cursor} channel={channel} contentIndex={i} />
         </div>
@@ -65,13 +66,13 @@ const SeriesCursor = ({ cursor, scale, channels, CursorContent }: Props) => {
     <div
       style={{
         left,
-        top: "100%",
-        position: "absolute",
-        display: "flex",
-        flexDirection: "row",
-        backgroundColor: "#eee",
-        padding: "2px 2px",
-        borderRadius: "3px"
+        top: '100%',
+        position: 'absolute',
+        display: 'flex',
+        flexDirection: 'row',
+        backgroundColor: '#eee',
+        padding: '2px 2px',
+        borderRadius: '3px',
       }}
     >
       {cursor}
@@ -80,10 +81,10 @@ const SeriesCursor = ({ cursor, scale, channels, CursorContent }: Props) => {
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        pointerEvents: "none"
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+        pointerEvents: 'none',
       }}
     >
       <Cursor />
@@ -93,32 +94,32 @@ const SeriesCursor = ({ cursor, scale, channels, CursorContent }: Props) => {
   );
 };
 
-const createIndices = R.memoize(array => array.map((_, i) => i));
+const createIndices = R.memoize((array) => array.map((_, i) => i));
 
-const indexToTime = chunk => index =>
+const indexToTime = (chunk) => (index) =>
   chunk.interval[0] +
   (index / chunk.values.length) * (chunk.interval[1] - chunk.interval[0]);
 
-const CursorContent = ({ cursor, channel }) => {
-  const Marker = ({ color }) => (
+const CursorContent = ({cursor, channel}) => {
+  const Marker = ({color}) => (
     <div
       style={{
-        margin: "auto",
-        marginLeft: "5px",
-        marginRight: "5px",
-        padding: "5px 5px",
-        backgroundColor: color
+        margin: 'auto',
+        marginLeft: '5px',
+        marginRight: '5px',
+        padding: '5px 5px',
+        backgroundColor: color,
       }}
     />
   );
 
   return (
-    <div style={{ margin: "5px 5px" }}>
+    <div style={{margin: '5px 5px'}}>
       {channel.traces.map((trace, i) => {
         const chunk = trace.chunks.find(
-          chunk => chunk.interval[0] <= cursor && chunk.interval[1] >= cursor
+          (chunk) => chunk.interval[0] <= cursor && chunk.interval[1] >= cursor
         );
-        const computeValue = chunk => {
+        const computeValue = (chunk) => {
           const indices = createIndices(chunk.values);
 
           const bisectTime = bisector(indexToTime(chunk)).left;
@@ -133,14 +134,14 @@ const CursorContent = ({ cursor, channel }) => {
           <div
             key={`${i}-${channel.traces.length}`}
             style={{
-              display: "flex",
-              flexDirection: "row",
-              backgroundColor: "#eee",
-              padding: "2px 2px",
-              borderRadius: "3px"
+              display: 'flex',
+              flexDirection: 'row',
+              backgroundColor: '#eee',
+              padding: '2px 2px',
+              borderRadius: '3px',
             }}
           >
-            <Marker color={colorOrder(i)} /> {chunk && computeValue(chunk)}{" "}
+            <Marker color={colorOrder(i)} /> {chunk && computeValue(chunk)}{' '}
           </div>
         );
       })}
@@ -150,7 +151,7 @@ const CursorContent = ({ cursor, channel }) => {
 
 SeriesCursor.defaultProps = {
   channels: [],
-  CursorContent
+  CursorContent,
 };
 
 export default SeriesCursor;

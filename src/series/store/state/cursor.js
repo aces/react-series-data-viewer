@@ -1,8 +1,8 @@
 // @flow
 
-import { createAction } from "redux-actions";
+import {createAction} from 'redux-actions';
 
-export const SET_CURSOR = "SET_CURSOR";
+export const SET_CURSOR = 'SET_CURSOR';
 export const setCursor = createAction(SET_CURSOR);
 
 export type Action = {

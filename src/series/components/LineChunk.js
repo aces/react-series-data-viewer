@@ -1,17 +1,17 @@
 // @flow
 
-import * as R from "ramda";
-import { scaleLinear } from "d3-scale";
-import { vec2 } from "gl-matrix";
-import React from "react";
-import * as THREE from "three";
-import { colorOrder } from "src/color";
-import type { Chunk } from "src/series/store/types";
-import Object2D from "./Object2D";
-import Line from "./Line";
+import * as R from 'ramda';
+import {scaleLinear} from 'd3-scale';
+import {vec2} from 'gl-matrix';
+import React from 'react';
+import * as THREE from 'three';
+import {colorOrder} from '../../color';
+import type {Chunk} from '../../series/store/types';
+import Object2D from './Object2D';
+import Line from './Line';
 
 const LineMemo = R.memoizeWith(
-  ({ interval, channelIndex, traceIndex, chunkIndex }) =>
+  ({interval, channelIndex, traceIndex, chunkIndex}) =>
     `${interval[0]},${interval[1]}-${channelIndex}-${traceIndex}-${chunkIndex}`,
   ({
     channelIndex,
@@ -21,14 +21,14 @@ const LineMemo = R.memoizeWith(
     seriesRange,
     values,
     ...rest
-  }) => {
+}) => {
     const scales = [
       scaleLinear()
         .domain(interval)
         .range([-0.5, 0.5]),
       scaleLinear()
         .domain(seriesRange)
-        .range([-0.5, 0.5])
+        .range([-0.5, 0.5]),
     ];
 
     const points = values.map((value, i) =>
@@ -39,7 +39,6 @@ const LineMemo = R.memoizeWith(
         scales[1](value)
       )
     );
-
     return (
       <Line
         cacheKey={`${interval[0]},${
@@ -72,15 +71,15 @@ const LineChunk = ({
   color,
   ...rest
 }: Props) => {
-  const { interval, values } = chunk;
+  const {interval, values} = chunk;
 
   if (values.length === 0) {
     return <Object2D />;
   }
 
   const range = scales[1].range();
-
   const chunkLength = Math.abs(scales[0](interval[1]) - scales[0](interval[0]));
+
   const chunkHeight = Math.abs(range[1] - range[0]);
 
   const p0 = vec2.fromValues(
@@ -89,7 +88,7 @@ const LineChunk = ({
   );
 
   const lineColor = new THREE.Color(
-    colorOrder(traceIndex) || new THREE.Color("#000")
+    colorOrder(traceIndex) || new THREE.Color('#000')
   );
 
   return (

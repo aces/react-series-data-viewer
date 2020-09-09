@@ -1,29 +1,27 @@
 // @flow
 
-import * as R from "ramda";
-import { vec2 } from "gl-matrix";
-import React from "react";
-import { Container, Row, Col, Input, ButtonGroup, Button } from "reactstrap";
-import { Group } from "@vx/vx";
-import { connect } from "react-redux";
-import { scaleLinear } from "d3-scale";
-import { DEFAULT_VIEW_BOUNDS, MAX_RENDERED_EPOCHS } from "src/vector";
-import ResponsiveViewer from "./ResponsiveViewer";
-import DefaultOrthoCamera from "./DefaultOrthoCamera";
-import Object2D from "./Object2D";
-import Axis from "./Axis";
-import Rectangle from "./Rectangle";
-import LineChunk from "./LineChunk";
-import Epoch from "./Epoch";
-import SeriesCursor from "./SeriesCursor";
-import RenderLayer from "./RenderLayer";
-import { setCursor } from "src/series/store/state/cursor";
-import { setOffsetIndex } from "src/series/store/logic/pagination";
+import * as R from 'ramda';
+import {vec2} from 'gl-matrix';
+import React from 'react';
+import {Container, Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
+import {Group} from '@vx/vx';
+import {connect} from 'react-redux';
+import {scaleLinear} from 'd3-scale';
+import {DEFAULT_VIEW_BOUNDS, MAX_RENDERED_EPOCHS} from '../../vector';
+import ResponsiveViewer from './ResponsiveViewer';
+import Object2D from './Object2D';
+import Axis from './Axis';
+import LineChunk from './LineChunk';
+import Epoch from './Epoch';
+import SeriesCursor from './SeriesCursor';
+import RenderLayer from './RenderLayer';
+import {setCursor} from '../store/state/cursor';
+import {setOffsetIndex} from '../store/logic/pagination';
 import type {
   ChannelMetadata,
   Channel,
-  Epoch as EpochType
-} from "src/series/store/types";
+  Epoch as EpochType,
+} from '../store/types';
 
 type Props = {
   domain: [number, number],
@@ -52,7 +50,7 @@ const SeriesRenderer = ({
   epochs,
   offsetIndex,
   setOffsetIndex,
-  limit
+  limit,
 }: Props) => {
   const topLeft = vec2.fromValues(
     DEFAULT_VIEW_BOUNDS.x[0],
@@ -77,23 +75,23 @@ const SeriesRenderer = ({
       .range([topLeft[0], bottomRight[0]]),
     scaleLinear()
       .domain(DEFAULT_VIEW_BOUNDS.y)
-      .range([topLeft[1], bottomRight[1]])
+      .range([topLeft[1], bottomRight[1]]),
   ];
 
   const filteredChannels = channels.filter((_, i) => !hidden.includes(i));
 
-  const XAxisLayer = ({ viewerWidth, viewerHeight, interval }) => {
+  const XAxisLayer = ({viewerWidth, viewerHeight, interval}) => {
     return (
       <Group>
         <Group>
           <Axis
             domain={interval}
             range={[0, viewerWidth]}
-            orientation="bottom"
+            orientation='bottom'
           />
         </Group>
         <Group top={viewerHeight - 1}>
-          <Axis domain={interval} range={[0, viewerWidth]} orientation="top" />
+          <Axis domain={interval} range={[0, viewerWidth]} orientation='top' />
         </Group>
       </Group>
     );
@@ -101,7 +99,7 @@ const SeriesRenderer = ({
 
   const EpochsLayer = () => {
     const filteredEpochs = epochs.filter(
-      epoch =>
+      (epoch) =>
         epoch.onset + epoch.duration > interval[0] && epoch.onset < interval[1]
     );
     return (
@@ -120,7 +118,7 @@ const SeriesRenderer = ({
       </Object2D>
     );
   };
-  const ChannelAxesLayer = ({ viewerWidth, viewerHeight }) => {
+  const ChannelAxesLayer = ({viewerWidth, viewerHeight}) => {
     const axisHeight = viewerHeight / filteredChannels.length;
     return (
       <Group>
@@ -132,8 +130,8 @@ const SeriesRenderer = ({
               padding={2}
               domain={seriesRange}
               range={[i * axisHeight, (i + 1) * axisHeight]}
-              format={tick => ""}
-              orientation="right"
+              format={(tick) => ''}
+              orientation='right'
             />
           );
         })}
@@ -176,9 +174,10 @@ const SeriesRenderer = ({
               .range([subTopLeft[0], subBottomRight[0]]),
             scaleLinear()
               .domain(channelMetadata[channel.index].seriesRange)
-              .range([subTopLeft[1], subBottomRight[1]])
+              .range([subTopLeft[1], subBottomRight[1]]),
           ];
           const seriesRange = channelMetadata[channel.index].seriesRange;
+
           return (
             <Object2D
               key={`${channel.index}-${channels.length}`}
@@ -213,8 +212,8 @@ const SeriesRenderer = ({
   };
 
   return channels.length > 0 ? (
-    <Container fluid style={{ height: "100%" }}>
-      <Row style={{ height: "100%" }}>
+    <Container fluid style={{height: '100%'}}>
+      <Row style={{height: '100%'}}>
         <Col xs={12}>
           <Row>
             <Col xs={2} />
@@ -237,32 +236,32 @@ const SeriesRenderer = ({
                   </ButtonGroup>
                 </Col>
                 <Col xs={9}>
-                  Showing{" "}
-                  <div style={{ display: "inline-block", width: "80px" }}>
+                  Showing{' '}
+                  <div style={{display: 'inline-block', width: '80px'}}>
                     <Input
-                      type="number"
+                      type='number'
                       value={offsetIndex}
-                      onChange={e => setOffsetIndex(e.target.value)}
+                      onChange={(e) => setOffsetIndex(e.target.value)}
                     />
-                  </div>{" "}
+                  </div>{' '}
                   to {offsetIndex + limit} of {channelMetadata.length}
                 </Col>
               </Row>
             </Col>
           </Row>
-          <Row style={{ height: "100%" }}>
+          <Row style={{height: '100%'}}>
             <Col
               xs={2}
               style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between"
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
             >
-              {filteredChannels.map(channel => (
+              {filteredChannels.map((channel) => (
                 <div
                   key={channel.index}
-                  style={{ display: "flex", margin: "auto" }}
+                  style={{display: 'flex', margin: 'auto'}}
                 >
                   {channelMetadata[channel.index] &&
                     channelMetadata[channel.index].name}
@@ -271,7 +270,7 @@ const SeriesRenderer = ({
             </Col>
             <Col
               xs={10}
-              style={{ position: "relative" }}
+              style={{position: 'relative'}}
               onMouseLeave={() => setCursor(null)}
             >
               {cursor && (
@@ -283,7 +282,6 @@ const SeriesRenderer = ({
               )}
               <ResponsiveViewer
                 transparent={true}
-                activeCamera="maincamera"
                 mouseMove={R.compose(
                   setCursor,
                   scales[0].invert,
@@ -299,7 +297,6 @@ const SeriesRenderer = ({
                   <ChannelAxesLayer viewerWidth={0} viewerHeight={0} />
                 </RenderLayer>
                 <RenderLayer three>
-                  <DefaultOrthoCamera name="maincamera" />
                   <EpochsLayer />
                   <ChannelsLayer />
                 </RenderLayer>
@@ -310,7 +307,7 @@ const SeriesRenderer = ({
       </Row>
     </Container>
   ) : (
-    <div style={{ width: "100%", height: "100%" }}>
+    <div style={{width: '100%', height: '100%'}}>
       <h4>Nothing To Display</h4>
     </div>
   );
@@ -325,11 +322,11 @@ SeriesRenderer.defaultProps = {
   hidden: [],
   channelMetadata: [],
   offsetIndex: 0,
-  limit: 6
+  limit: 6,
 };
 
 export default connect(
-  state => ({
+  (state) => ({
     domain: state.bounds.domain,
     interval: state.bounds.interval,
     cursor: state.cursor,
@@ -338,10 +335,10 @@ export default connect(
     hidden: state.montage.hidden,
     channelMetadata: state.dataset.channelMetadata,
     seriesRange: state.dataset.seriesRange,
-    offsetIndex: state.dataset.offsetIndex
+    offsetIndex: state.dataset.offsetIndex,
   }),
-  
-  (dispatch: any => void) => ({
+
+  (dispatch: (any) => void) => ({
     setOffsetIndex: R.compose(
       dispatch,
       setOffsetIndex
@@ -349,6 +346,6 @@ export default connect(
     setCursor: R.compose(
       dispatch,
       setCursor
-    )
+    ),
   })
 )(SeriesRenderer);

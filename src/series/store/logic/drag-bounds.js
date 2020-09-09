@@ -1,29 +1,29 @@
 // @flow
 
-import * as R from "ramda";
-import { Observable, merge } from "rxjs";
-import * as Rx from "rxjs/operators";
-import { ofType } from "redux-observable";
-import { createAction } from "redux-actions";
-import { SET_INTERVAL, setInterval } from "../state/bounds";
-import { updateViewedChunks } from "./fetch-chunks";
+import * as R from 'ramda';
+import {Observable, merge} from 'rxjs';
+import * as Rx from 'rxjs/operators';
+import {ofType} from 'redux-observable';
+import {createAction} from 'redux-actions';
+import {SET_INTERVAL, setInterval} from '../state/bounds';
+import {updateViewedChunks} from './fetch-chunks';
 
 import type {
   State as BoundsState,
-  Action as BoundsAction
-} from "../state/bounds";
-import { MIN_INTERVAL_FACTOR } from "src/vector";
+  Action as BoundsAction,
+} from '../state/bounds';
+import {MIN_INTERVAL_FACTOR} from '../../../vector';
 
-export const START_DRAG_INTERVAL = "START_DRAG_INTERVAL";
+export const START_DRAG_INTERVAL = 'START_DRAG_INTERVAL';
 export const startDragInterval = createAction(START_DRAG_INTERVAL);
 
-export const CONTINUE_DRAG_INTERVAL = "CONTINUE_DRAG_INTERVAL";
+export const CONTINUE_DRAG_INTERVAL = 'CONTINUE_DRAG_INTERVAL';
 export const continueDragInterval = createAction(CONTINUE_DRAG_INTERVAL);
 
-export const END_DRAG_INTERVAL = "END_DRAG_INTERVAL";
+export const END_DRAG_INTERVAL = 'END_DRAG_INTERVAL';
 export const endDragInterval = createAction(END_DRAG_INTERVAL);
 
-export type Action = BoundsAction | { type: "UPDATE_VIEWED_CHUNKS" };
+export type Action = BoundsAction | { type: 'UPDATE_VIEWED_CHUNKS' };
 
 export const createDragBoundsEpic = (fromState: any => BoundsState) => (
   action$: Observable<any>,
@@ -31,15 +31,15 @@ export const createDragBoundsEpic = (fromState: any => BoundsState) => (
 ): Observable<Action> => {
   const startDrag$ = action$.pipe(
     ofType(START_DRAG_INTERVAL),
-    Rx.map(R.prop("payload"))
+    Rx.map(R.prop('payload'))
   );
   const continueDrag$ = action$.pipe(
     ofType(CONTINUE_DRAG_INTERVAL),
-    Rx.map(R.prop("payload"))
+    Rx.map(R.prop('payload'))
   );
   const endDrag$ = action$.pipe(ofType(END_DRAG_INTERVAL));
   const computeNewInterval = ([position, state]) => {
-    const { interval, domain } = R.clone(fromState(state));
+    const {interval, domain} = R.clone(fromState(state));
 
     const minSize = Math.abs(domain[1] - domain[0]) * MIN_INTERVAL_FACTOR;
 

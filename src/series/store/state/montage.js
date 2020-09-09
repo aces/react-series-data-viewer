@@ -1,18 +1,18 @@
 // @flow
 
-import * as R from "ramda";
-import { createAction } from "redux-actions";
-import type { Electrode } from "../types";
+import * as R from 'ramda';
+import {createAction} from 'redux-actions';
+import type {Electrode} from '../types';
 
-export const SET_ELECTRODES = "SET_ELECTRODES";
+export const SET_ELECTRODES = 'SET_ELECTRODES';
 export const setElectrodes = createAction(SET_ELECTRODES);
 
-export const SET_HIDDEN = "SET_HIDDEN";
+export const SET_HIDDEN = 'SET_HIDDEN';
 export const setHidden = createAction(SET_HIDDEN);
 
 export type Action =
-  | { type: "SET_MONTAGE", payload: Electrode[] }
-  | { type: "SET_HIDDEN", payload: number[] };
+  | {type: 'SET_MONTAGE', payload: Electrode[]}
+  | {type: 'SET_HIDDEN', payload: number[]};
 
 export type State = {
   electrodes: Electrode[],
@@ -22,7 +22,7 @@ export type State = {
 export type Reducer = (state: State, action: ?Action) => State;
 
 export const montageReducer: Reducer = (
-  state = { electrodes: [], hidden: [] },
+  state = {electrodes: [], hidden: []},
   action
 ) => {
   if (!action) {
@@ -30,10 +30,10 @@ export const montageReducer: Reducer = (
   }
   switch (action.type) {
     case SET_ELECTRODES: {
-      return R.assoc("electrodes", action.payload, state);
+      return R.assoc('electrodes', action.payload, state);
     }
     case SET_HIDDEN: {
-      return R.assoc("hidden", action.payload, state);
+      return R.assoc('hidden', action.payload, state);
     }
     default: {
       return state;

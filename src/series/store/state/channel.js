@@ -1,21 +1,21 @@
 // @flow
 
-import * as R from "ramda";
-import { createAction } from "redux-actions";
-import type { Channel, Chunk } from "../types";
+import * as R from 'ramda';
+import {createAction} from 'redux-actions';
+import type {Channel, Chunk} from '../types';
 
-export const SET_CHUNKS = "SET_CHUNKS";
+export const SET_CHUNKS = 'SET_CHUNKS';
 export const setChunks = createAction(SET_CHUNKS);
 
 export type Action = {
-  type: "SET_CHUNKS",
-  payload: { traceIndex: number, chunks: Chunk[] }
+  type: 'SET_CHUNKS',
+  payload: {traceIndex: number, chunks: Chunk[] }
 };
 
 export type State = Channel;
 
 export const channelReducer = (
-  state: Channel = { index: 0, traces: [] },
+  state: Channel = {index: 0, traces: []},
   action: ?Action
 ): State => {
   if (!action) {
@@ -25,7 +25,7 @@ export const channelReducer = (
     case SET_CHUNKS: {
       return R.assocPath(
         // $FlowFixMe TODO: ramda types don't allow for number as index
-        ["traces", action.payload.traceIndex, "chunks"],
+        ['traces', action.payload.traceIndex, 'chunks'],
         action.payload.chunks,
         state
       );

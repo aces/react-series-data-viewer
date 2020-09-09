@@ -1,1 +1,1 @@
-export { default as EEGLabSeriesProvider } from "./EEGLabSeriesProvider";
+export {default as EEGLabSeriesProvider} from './EEGLabSeriesProvider';

@@ -1,21 +1,27 @@
-import { tsvParse } from "d3-dsv";
-import React, { Component } from "react";
-import { createStore, applyMiddleware } from "redux";
-import { Provider } from "react-redux";
-import { createEpicMiddleware } from "redux-observable";
-import thunk from "redux-thunk";
-import { fetchJSON, fetchText } from "src/ajax";
-import { rootReducer, rootEpic } from "src/series/store";
+import {tsvParse} from 'd3-dsv';
+import React, {Component} from 'react';
+import {createStore, applyMiddleware} from 'redux';
+import {Provider} from 'react-redux';
+import {createEpicMiddleware} from 'redux-observable';
+import thunk from 'redux-thunk';
+import {fetchJSON, fetchText} from '../ajax';
+import {rootReducer, rootEpic} from '../series/store';
 import {
   setChannels,
   setEpochs,
   setDatasetMetadata,
-  emptyChannels
-} from "src/series/store/state/dataset";
-import { setDomain, setInterval } from "src/series/store/state/bounds";
-import "bootstrap/dist/css/bootstrap.min.css";
+  emptyChannels,
+} from '../series/store/state/dataset';
+import {setDomain, setInterval} from '../series/store/state/bounds';
 
+/**
+ * EEGLabSeriesProvider component
+ */
 class EEGLabSeriesProvider extends Component {
+  /**
+   * @constructor
+   * @param {object} props - React Component properties
+   */
   constructor(props: Props) {
     super(props);
     const epicMiddleware = createEpicMiddleware();
@@ -30,27 +36,27 @@ class EEGLabSeriesProvider extends Component {
 
     window.EEGLabSeriesProviderStore = this.store;
 
-    const { chunkDirectoryURLs, epochsTableURLs, limit } = props;
+    const {chunkDirectoryURLs, epochsTableURLs, limit} = props;
 
     const chunkUrls =
       chunkDirectoryURLs instanceof Array
         ? chunkDirectoryURLs
         : [chunkDirectoryURLs];
 
-    const racers = (fetcher, urls, route = "") =>
-      urls.map(url =>
+    const racers = (fetcher, urls, route = '') =>
+      urls.map((url) =>
         fetcher(`${url}${route}`)
-          .then(json => ({ json, url }))
+          .then((json) => ({json, url}))
           // if request fails don't resolve
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
-            return new Promise(resolve => {});
+            return new Promise((resolve) => {});
           })
       );
 
-    Promise.race(racers(fetchJSON, chunkUrls, "/index.json")).then(
-      ({ json, url }) => {
-        const { channelMetadata, shapes, timeInterval, seriesRange } = json;
+    Promise.race(racers(fetchJSON, chunkUrls, '/index.json')).then(
+      ({json, url}) => {
+        const {channelMetadata, shapes, timeInterval, seriesRange} = json;
         this.store.dispatch(
           setDatasetMetadata({
             chunkDirectoryURL: url,
@@ -58,7 +64,7 @@ class EEGLabSeriesProvider extends Component {
             shapes,
             timeInterval,
             seriesRange,
-            limit
+            limit,
           })
         );
         this.store.dispatch(setChannels(emptyChannels(this.props.limit, 1)));
@@ -70,27 +76,34 @@ class EEGLabSeriesProvider extends Component {
     const epochUrls =
       epochsTableURLs instanceof Array ? epochsTableURLs : [epochsTableURLs];
 
-    Promise.race(racers(fetchText, epochUrls)).then(text => {
-      if (!(typeof text.json === 'string' || text.json instanceof String)) return;
+    Promise.race(racers(fetchText, epochUrls)).then((text) => {
+      if (!(typeof text.json === 'string'
+         || text.json instanceof String)) return;
       this.store.dispatch(
         setEpochs(
-          tsvParse(text.json).map(({ onset, duration, trial_type }) => ({
+          tsvParse(text.json).map(({onset, duration, trialType}) => ({
             onset: parseFloat(onset),
             duration: parseFloat(duration),
-            type: trial_type,
-            channels: "all"
+            type: trialType,
+            channels: 'all',
           }))
         )
       );
     });
   }
+
+  /**
+   * Renders the React component.
+   *
+   * @return {JSX} - React markup for the component
+   */
   render() {
     return <Provider store={this.store}>{this.props.children}</Provider>;
   }
 }
 
 EEGLabSeriesProvider.defaultProps = {
-  limit: 6
+  limit: 6,
 };
 
 export default EEGLabSeriesProvider;

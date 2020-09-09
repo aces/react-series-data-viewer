@@ -1,4 +1,4 @@
-import { EEGLabSeriesProvider } from "src/eeglab";
-import { IntervalSelect, SeriesRenderer } from "src/series";
+import {EEGLabSeriesProvider} from "src/eeglab";
+import {IntervalSelect, SeriesRenderer} from "src/series";
 
-export default { EEGLabSeriesProvider, IntervalSelect, SeriesRenderer };
+export default {EEGLabSeriesProvider, IntervalSelect, SeriesRenderer };

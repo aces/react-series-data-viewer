@@ -1,19 +1,19 @@
 // @flow
 
-import * as R from "ramda";
-import { Observable } from "rxjs";
-import * as Rx from "rxjs/operators";
-import { ofType } from "redux-observable";
-import { createAction } from "redux-actions";
-import type { Channel, ChannelMetadata } from "../types";
+import * as R from 'ramda';
+import {Observable} from 'rxjs';
+import * as Rx from 'rxjs/operators';
+import {ofType} from 'redux-observable';
+import {createAction} from 'redux-actions';
+import type {Channel, ChannelMetadata} from '../types';
 import {
   emptyChannels,
   setDatasetMetadata,
-  setChannels
-} from "../state/dataset";
-import { updateViewedChunks } from "./fetch-chunks";
+  setChannels,
+} from '../state/dataset';
+import {updateViewedChunks} from './fetch-chunks';
 
-export const SET_OFFSET_INDEX = "SET_OFFSET_INDEX";
+export const SET_OFFSET_INDEX = 'SET_OFFSET_INDEX';
 export const setOffsetIndex = createAction(SET_OFFSET_INDEX);
 
 export type Action = ((any) => void) => void;
@@ -30,10 +30,10 @@ export const createPaginationEpic = (fromState: any => State) => (
 ): Observable<Action> => {
   return action$.pipe(
     ofType(SET_OFFSET_INDEX),
-    Rx.map(R.prop("payload")),
+    Rx.map(R.prop('payload')),
     Rx.withLatestFrom(state$),
     Rx.map(([payload, state]) => {
-      const { limit, channelMetadata, channels } = fromState(state);
+      const {limit, channelMetadata, channels} = fromState(state);
 
       const offsetIndex = Math.min(
         Math.max(payload, 0),
@@ -48,7 +48,7 @@ export const createPaginationEpic = (fromState: any => State) => (
         const channel =
           channels.find(
             R.pipe(
-              R.prop("index"),
+              R.prop('index'),
               R.equals(channelIndex)
             )
           ) || emptyChannels(1, 1)[0];
@@ -57,8 +57,8 @@ export const createPaginationEpic = (fromState: any => State) => (
         channelIndex++;
       }
 
-      return dispatch => {
-        dispatch(setDatasetMetadata({ offsetIndex }));
+      return (dispatch) => {
+        dispatch(setDatasetMetadata({offsetIndex}));
         dispatch(setChannels(newChannels));
         dispatch(updateViewedChunks());
       };

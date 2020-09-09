@@ -1,16 +1,16 @@
 // @flow
 
-import { createAction } from "redux-actions";
+import {createAction} from 'redux-actions';
 
-export const SET_INTERVAL = "SET_INTERVAL";
+export const SET_INTERVAL = 'SET_INTERVAL';
 export const setInterval = createAction(SET_INTERVAL);
 
-export const SET_DOMAIN = "SET_DOMAIN";
+export const SET_DOMAIN = 'SET_DOMAIN';
 export const setDomain = createAction(SET_DOMAIN);
 
 export type Action =
-  | { type: "SET_INTERVAL", payload: [number, number] }
-  | { type: "SET_DOMAIN", payload: [number, number] };
+  | {type: 'SET_INTERVAL', payload: [number, number]}
+  | {type: 'SET_DOMAIN', payload: [number, number]};
 
 export type State = {
   interval: [number, number],
@@ -43,9 +43,9 @@ const domain = (state = [0, 1], action: ?Action): [number, number] => {
 };
 
 export const boundsReducer: (State, Action) => State = (
-  state = { interval: interval(), domain: domain() },
+  state = {interval: interval(), domain: domain()},
   action
 ) => ({
   interval: interval(state.interval, action),
-  domain: domain(state.domain, action)
+  domain: domain(state.domain, action),
 });
