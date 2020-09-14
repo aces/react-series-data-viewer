@@ -249,7 +249,7 @@ const SeriesRenderer = ({
               </Row>
             </Col>
           </Row>
-          <Row style={{height: '100%'}}>
+          <Row style={{height: '100%'}} noGutters>
             <Col
               xs={2}
               style={{
