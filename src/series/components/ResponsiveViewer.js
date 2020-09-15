@@ -130,6 +130,9 @@ ResponsiveViewer.defaultProps = {
   containerWidth: 400,
   containerHeight: 300,
   transparent: false,
+  mouseMove: () => {},
+  mouseDown: () => {},
+  mouseUp: () => {},
 };
 
 export default withResizeObserverProps(({width, height}) => ({
