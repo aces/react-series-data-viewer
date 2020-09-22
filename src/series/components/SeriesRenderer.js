@@ -218,7 +218,7 @@ const SeriesRenderer = ({
           <Row>
             <Col xs={2} />
             <Col xs={10}>
-              <Row>
+              <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
                 <Col xs={3}>
                   <ButtonGroup>
                     <Button onClick={() => setOffsetIndex(offsetIndex - limit)}>
@@ -308,7 +308,7 @@ const SeriesRenderer = ({
     </Container>
   ) : (
     <div style={{width: '100%', height: '100%'}}>
-      <h4>Nothing To Display</h4>
+      <h4>Loading...</h4>
     </div>
   );
 };
