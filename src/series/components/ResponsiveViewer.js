@@ -51,13 +51,14 @@ const ResponsiveViewer = ({
     (layer) => layer.props.three
   ).map(provision);
 
+  const domain = window.EEGLabSeriesProviderStore.getState().bounds.domain;
+  const amplitude = [0, 1];
   const eventScale = [
     scaleLinear()
-      .domain([0, 1])
+      .domain(domain)
       .range(DEFAULT_VIEW_BOUNDS.x),
-
     scaleLinear()
-      .domain([0, 1])
+      .domain(amplitude)
       .range(DEFAULT_VIEW_BOUNDS.y),
   ];
 
@@ -70,8 +71,8 @@ const ResponsiveViewer = ({
     } = e.currentTarget.getBoundingClientRect();
 
     return [
-      eventScale[0]((e.clientX - left) / width),
-      eventScale[1]((e.clientY - top) / height),
+      eventScale[0].invert(eventScale[0]((e.clientX - left) / width * domain[1])),
+      eventScale[1].invert(eventScale[1]((e.clientY - top) / height * amplitude[1])),
     ];
   };
 
@@ -91,6 +92,7 @@ const ResponsiveViewer = ({
         mouseUp,
         eventToPosition
       )}
+      style={{position: 'relative', width: '100%', height: '100%'}}
     >
       <Canvas
         style={{position: 'absolute'}}

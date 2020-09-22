@@ -52,6 +52,7 @@ const IntervalSelect = ({
     p0: vec2.fromValues(x, topLeft[1]),
     p1: vec2.fromValues(x, bottomRight[1]),
   });
+
   const BackShadowLayer = ({interval}) => (
     <Object2D position={center} layer={1}>
       <Rectangle
@@ -77,21 +78,24 @@ const IntervalSelect = ({
   return (
     <ResponsiveViewer
       transparent={true}
-      mouseDown={R.compose(
-        dragStart,
-        scale.invert,
-        R.nth(0)
-      )}
-      mouseMove={R.compose(
-        dragContinue,
-        scale.invert,
-        R.nth(0)
-      )}
-      mouseUp={R.compose(
-        dragEnd,
-        scale.invert,
-        R.nth(0)
-      )}
+      mouseDown={(v) => {
+        R.compose(
+          dragStart,
+          R.nth(0)
+        )(v);
+      }}
+      mouseMove={(v) => {
+        R.compose(
+          dragContinue,
+          R.nth(0)
+        )(v);
+      }}
+      mouseUp={(v) => {
+        R.compose(
+          dragEnd,
+          R.nth(0)
+        )(v);
+      }}
     >
       <RenderLayer svg>
         <AxisLayer viewerWidth={0} viewerHeight={0} domain={domain} />
