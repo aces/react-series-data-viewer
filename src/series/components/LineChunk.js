@@ -3,22 +3,22 @@
 import * as R from 'ramda';
 import {scaleLinear} from 'd3-scale';
 import {vec2} from 'gl-matrix';
-import React from 'react';
 import * as THREE from 'three';
 import {colorOrder} from '../../color';
-import type {Chunk} from '../../series/store/types';
+import type {Chunk} from '../store/types';
 import Object2D from './Object2D';
 import Line from './Line';
 
 const LineMemo = R.memoizeWith(
-  ({interval, channelIndex, traceIndex, chunkIndex}) =>
-    `${interval[0]},${interval[1]}-${channelIndex}-${traceIndex}-${chunkIndex}`,
+  ({interval, amplitudeScale, channelIndex, traceIndex, chunkIndex}) =>
+    `${interval[0]},${interval[1]},${amplitudeScale}-${channelIndex}-${traceIndex}-${chunkIndex}`,
   ({
     channelIndex,
     traceIndex,
     chunkIndex,
     interval,
     seriesRange,
+    amplitudeScale,
     values,
     ...rest
 }) => {
@@ -27,7 +27,7 @@ const LineMemo = R.memoizeWith(
         .domain(interval)
         .range([-0.5, 0.5]),
       scaleLinear()
-        .domain(seriesRange)
+        .domain(seriesRange.map((x) => (x * amplitudeScale)))
         .range([-0.5, 0.5]),
     ];
 
@@ -41,9 +41,7 @@ const LineMemo = R.memoizeWith(
     );
     return (
       <Line
-        cacheKey={`${interval[0]},${
-          interval[1]
-        }-${channelIndex}-${traceIndex}-${chunkIndex}`}
+        cacheKey={`${interval[0]},${interval[1]},${amplitudeScale}-${channelIndex}-${traceIndex}-${chunkIndex}`}
         points={points}
         {...rest}
       />
@@ -57,6 +55,7 @@ type Props = {
   chunkIndex: number,
   chunk: Chunk,
   seriesRange: [number, number],
+  amplitudeScale: number,
   scales: [any, any],
   color?: THREE.Color
 };
@@ -67,6 +66,7 @@ const LineChunk = ({
   chunkIndex,
   chunk,
   seriesRange,
+  amplitudeScale,
   scales,
   color,
   ...rest
@@ -88,7 +88,7 @@ const LineChunk = ({
   );
 
   const lineColor = new THREE.Color(
-    colorOrder(traceIndex) || new THREE.Color('#000')
+    colorOrder(channelIndex) || new THREE.Color('#666')
   );
 
   return (
@@ -103,6 +103,7 @@ const LineChunk = ({
         values={values}
         interval={interval}
         seriesRange={seriesRange}
+        amplitudeScale={amplitudeScale}
         color={lineColor}
         {...rest}
       />

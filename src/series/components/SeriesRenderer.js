@@ -2,7 +2,6 @@
 
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
-import React from 'react';
 import {Container, Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
 import {Group} from '@vx/vx';
 import {connect} from 'react-redux';
@@ -17,6 +16,8 @@ import SeriesCursor from './SeriesCursor';
 import RenderLayer from './RenderLayer';
 import {setCursor} from '../store/state/cursor';
 import {setOffsetIndex} from '../store/logic/pagination';
+import {setAmplitudesScale, resetAmplitudesScale} from '../store/logic/scale-amplitudes';
+
 import type {
   ChannelMetadata,
   Channel,
@@ -27,6 +28,7 @@ type Props = {
   domain: [number, number],
   interval: [number, number],
   seriesRange: [number, number],
+  amplitudeScale: number,
   cursor: ?number,
   setCursor: (?number) => void,
   channels: Channel[],
@@ -35,6 +37,7 @@ type Props = {
   epochs: EpochType[],
   offsetIndex: number,
   setOffsetIndex: number => void,
+  setAmplitudesScale: number => void,
   limit: number
 };
 
@@ -42,6 +45,7 @@ const SeriesRenderer = ({
   domain,
   interval,
   seriesRange,
+  amplitudeScale,
   cursor,
   setCursor,
   channels,
@@ -50,6 +54,8 @@ const SeriesRenderer = ({
   epochs,
   offsetIndex,
   setOffsetIndex,
+  setAmplitudesScale,
+  resetAmplitudesScale,
   limit,
 }: Props) => {
   const topLeft = vec2.fromValues(
@@ -196,6 +202,7 @@ const SeriesRenderer = ({
                             key={`${k}-${trace.chunks.length}`}
                             chunk={chunk}
                             seriesRange={seriesRange}
+                            amplitudeScale={amplitudeScale}
                             scales={scales}
                           />
                         );
@@ -219,7 +226,14 @@ const SeriesRenderer = ({
             <Col xs={2} />
             <Col xs={10}>
               <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
-                <Col xs={3}>
+                <Col xs={2}>
+                  <ButtonGroup>
+                    <Button onClick={() => setAmplitudesScale(1.1)}>-</Button>
+                    <Button onClick={() => resetAmplitudesScale()}>Reset</Button>
+                    <Button onClick={() => setAmplitudesScale(0.9)}>+</Button>
+                  </ButtonGroup>
+                </Col>
+                <Col xs={2}>
                   <ButtonGroup>
                     <Button onClick={() => setOffsetIndex(offsetIndex - limit)}>
                       &lt;&lt;
@@ -235,7 +249,7 @@ const SeriesRenderer = ({
                     </Button>
                   </ButtonGroup>
                 </Col>
-                <Col xs={9}>
+                <Col xs={8}>
                   Showing{' '}
                   <div style={{display: 'inline-block', width: '80px'}}>
                     <Input
@@ -276,15 +290,14 @@ const SeriesRenderer = ({
               {cursor && (
                 <SeriesCursor
                   cursor={cursor}
-                  scale={scales[0]}
                   channels={channels}
+                  interval={interval}
                 />
               )}
               <ResponsiveViewer
                 transparent={true}
                 mouseMove={R.compose(
                   setCursor,
-                  scales[0].invert,
                   R.nth(0)
                 )}
               >
@@ -317,6 +330,7 @@ SeriesRenderer.defaultProps = {
   domain: [0, 1],
   interval: [0.25, 0.75],
   seriesRange: [-1, 2],
+  amplitudeScale: 1,
   channels: [],
   epochs: [],
   hidden: [],
@@ -329,6 +343,7 @@ export default connect(
   (state) => ({
     domain: state.bounds.domain,
     interval: state.bounds.interval,
+    amplitudeScale: state.bounds.amplitudeScale,
     cursor: state.cursor,
     channels: state.dataset.channels,
     epochs: state.dataset.epochs,
@@ -346,6 +361,14 @@ export default connect(
     setCursor: R.compose(
       dispatch,
       setCursor
+    ),
+    setAmplitudesScale: R.compose(
+      dispatch,
+      setAmplitudesScale
+    ),
+    resetAmplitudesScale: R.compose(
+      dispatch,
+      resetAmplitudesScale
     ),
   })
 )(SeriesRenderer);

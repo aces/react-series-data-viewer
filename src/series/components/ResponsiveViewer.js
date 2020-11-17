@@ -33,7 +33,7 @@ const ResponsiveViewer = ({
   children,
 }: Props) => {
   const width = containerWidth;
-  const height = containerHeight - 4;
+  const height = containerHeight;
 
   DEFAULT_VIEW_BOUNDS.x[0] = -width/2;
   DEFAULT_VIEW_BOUNDS.x[1] = width/2;
