@@ -1,12 +1,10 @@
 // @flow
 
 import * as R from 'ramda';
-import React from 'react';
 import type {Node} from 'react';
 import {bisector} from 'd3-array';
 import {colorOrder} from '../../color';
 import type {Channel} from '../store/types';
-import {DEFAULT_VIEW_BOUNDS} from '../../vector';
 
 type CursorContentProps = {
   cursor: number,
@@ -16,16 +14,14 @@ type CursorContentProps = {
 
 type Props = {
   cursor: number,
-  scale: any,
   channels: Channel[],
-  CursorContent: CursorContentProps => Node
+  CursorContent: CursorContentProps => Node,
+  interval: [Number, Number],
+  showMarker: boolean
 };
 
-const SeriesCursor = ({cursor, scale, channels, CursorContent}: Props) => {
-  const left = `${Math.min(
-    Math.max(100 * (scale(cursor) + DEFAULT_VIEW_BOUNDS.x[1]) / (2 * DEFAULT_VIEW_BOUNDS.x[1]), 0),
-    100
-  )}%`;
+const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: Props) => {
+  const left = Math.min(Math.max(100 * cursor / interval[1], 0), 100) + '%';
 
   const Cursor = () => (
     <div
@@ -57,7 +53,7 @@ const SeriesCursor = ({cursor, scale, channels, CursorContent}: Props) => {
           key={`${channel.index}-${channels.length}`}
           style={{margin: 'auto'}}
         >
-          <CursorContent cursor={cursor} channel={channel} contentIndex={i} />
+          <CursorContent cursor={cursor} channel={channel} contentIndex={i} showMarker={showMarker} />
         </div>
       ))}
     </div>
@@ -85,6 +81,7 @@ const SeriesCursor = ({cursor, scale, channels, CursorContent}: Props) => {
         height: '100%',
         position: 'absolute',
         pointerEvents: 'none',
+        zIndex: 10,
       }}
     >
       <Cursor />
@@ -100,7 +97,7 @@ const indexToTime = (chunk) => (index) =>
   chunk.interval[0] +
   (index / chunk.values.length) * (chunk.interval[1] - chunk.interval[0]);
 
-const CursorContent = ({cursor, channel}) => {
+const CursorContent = ({cursor, channel, contentIndex, showMarker}) => {
   const Marker = ({color}) => (
     <div
       style={{
@@ -121,15 +118,13 @@ const CursorContent = ({cursor, channel}) => {
         );
         const computeValue = (chunk) => {
           const indices = createIndices(chunk.values);
-
           const bisectTime = bisector(indexToTime(chunk)).left;
-
           const idx = bisectTime(indices, cursor);
-
           const value = chunk.values[idx];
 
           return value;
         };
+
         return (
           <div
             key={`${i}-${channel.traces.length}`}
@@ -141,7 +136,8 @@ const CursorContent = ({cursor, channel}) => {
               borderRadius: '3px',
             }}
           >
-            <Marker color={colorOrder(i)} /> {chunk && computeValue(chunk)}{' '}
+            {showMarker && (<Marker color={colorOrder(contentIndex)} />)}
+            {chunk && computeValue(chunk)}{' '}
           </div>
         );
       })}
@@ -152,6 +148,7 @@ const CursorContent = ({cursor, channel}) => {
 SeriesCursor.defaultProps = {
   channels: [],
   CursorContent,
+  showMarker: false,
 };
 
 export default SeriesCursor;

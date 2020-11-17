@@ -1,7 +1,6 @@
 // @flow
 
 import * as R from 'ramda';
-import React from 'react';
 import * as THREE from 'three';
 import type {Vector2} from 'src/vector';
 

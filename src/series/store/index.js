@@ -10,6 +10,7 @@ import {montageReducer} from './state/montage';
 import {createDragBoundsEpic} from './logic/drag-bounds';
 import {createFetchChunksEpic} from './logic/fetch-chunks';
 import {createPaginationEpic} from './logic/pagination';
+import {createScaleAmplitudesEpic, createResetAmplitudesEpic} from './logic/scale-amplitudes';
 
 export const rootReducer = combineReducers({
   bounds: boundsReducer,
@@ -27,5 +28,10 @@ export const rootEpic = combineEpics(
   createPaginationEpic(({dataset}) => {
     const {limit, channelMetadata, channels} = dataset;
     return {limit, channelMetadata, channels};
-  })
+  }),
+  createScaleAmplitudesEpic(({bounds}) => {
+    const {amplitudeScale} = bounds;
+    return amplitudeScale;
+  }),
+  createResetAmplitudesEpic()
 );
