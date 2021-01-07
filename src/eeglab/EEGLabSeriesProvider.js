@@ -1,5 +1,5 @@
 import {tsvParse} from 'd3-dsv';
-import React, {Component} from 'react';
+import {Component} from 'react';
 import {createStore, applyMiddleware} from 'redux';
 import {Provider} from 'react-redux';
 import {createEpicMiddleware} from 'redux-observable';

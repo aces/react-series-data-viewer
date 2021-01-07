@@ -1,6 +1,5 @@
 // @flow
 
-import React from 'react';
 import {scaleLinear} from 'd3-scale';
 import {Axis as VxAxis} from '@vx/vx';
 

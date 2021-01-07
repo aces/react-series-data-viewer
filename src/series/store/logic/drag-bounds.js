@@ -40,14 +40,15 @@ export const createDragBoundsEpic = (fromState: any => BoundsState) => (
   const endDrag$ = action$.pipe(ofType(END_DRAG_INTERVAL));
   const computeNewInterval = ([position, state]) => {
     const {interval, domain} = R.clone(fromState(state));
+    const x = position * domain[1];
     const minSize = Math.abs(domain[1] - domain[0]) * MIN_INTERVAL_FACTOR;
     const [i0, i1] =
-      Math.abs(position - interval[0]) < Math.abs(position - interval[1])
+      Math.abs(x - interval[0]) < Math.abs(x - interval[1])
         ? [0, 1]
         : [1, 0];
 
     const sign = Math.sign(interval[i1] - interval[i0]);
-    interval[i0] = position;
+    interval[i0] = x;
     interval[i0] +=
       sign > 0
         ? Math.min(interval[i1] - minSize - interval[i0], 0)

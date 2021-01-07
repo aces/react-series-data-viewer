@@ -21,7 +21,8 @@ type Props = {
 };
 
 const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: Props) => {
-  const left = Math.min(Math.max(100 * cursor / interval[1], 0), 100) + '%';
+  const left = Math.min(Math.max(100 * cursor, 0), 100) + '%';
+  const time = interval[0] + cursor * (interval[1] - interval[0]);
 
   const Cursor = () => (
     <div
@@ -53,7 +54,7 @@ const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: P
           key={`${channel.index}-${channels.length}`}
           style={{margin: 'auto'}}
         >
-          <CursorContent cursor={cursor} channel={channel} contentIndex={i} showMarker={showMarker} />
+          <CursorContent time={time} channel={channel} contentIndex={i} showMarker={showMarker} />
         </div>
       ))}
     </div>
@@ -71,7 +72,7 @@ const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: P
         borderRadius: '3px',
       }}
     >
-      {cursor}
+      {time}
     </div>
   );
   return (
@@ -97,7 +98,7 @@ const indexToTime = (chunk) => (index) =>
   chunk.interval[0] +
   (index / chunk.values.length) * (chunk.interval[1] - chunk.interval[0]);
 
-const CursorContent = ({cursor, channel, contentIndex, showMarker}) => {
+const CursorContent = ({time, channel, contentIndex, showMarker}) => {
   const Marker = ({color}) => (
     <div
       style={{
@@ -114,12 +115,12 @@ const CursorContent = ({cursor, channel, contentIndex, showMarker}) => {
     <div style={{margin: '5px 5px'}}>
       {channel.traces.map((trace, i) => {
         const chunk = trace.chunks.find(
-          (chunk) => chunk.interval[0] <= cursor && chunk.interval[1] >= cursor
+          (chunk) => chunk.interval[0] <= time && chunk.interval[1] >= time
         );
         const computeValue = (chunk) => {
           const indices = createIndices(chunk.values);
           const bisectTime = bisector(indexToTime(chunk)).left;
-          const idx = bisectTime(indices, cursor);
+          const idx = bisectTime(indices, time);
           const value = chunk.values[idx];
 
           return value;

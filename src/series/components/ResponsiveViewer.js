@@ -69,10 +69,9 @@ const ResponsiveViewer = ({
       width,
       height,
     } = e.currentTarget.getBoundingClientRect();
-
     return [
-      eventScale[0].invert(eventScale[0]((e.clientX - left) / width * domain[1])),
-      eventScale[1].invert(eventScale[1]((e.clientY - top) / height * amplitude[1])),
+      eventScale[0].invert(eventScale[0]((e.clientX - left) / width)),
+      eventScale[1].invert(eventScale[1]((e.clientY - top) / height)),
     ];
   };
 
