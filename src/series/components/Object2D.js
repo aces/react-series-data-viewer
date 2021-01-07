@@ -1,7 +1,6 @@
 // @flow
 
 import {vec2} from 'gl-matrix';
-import React from 'react';
 import type{Node} from 'react';
 import * as THREE from 'three';
 import type{Vector2} from 'src/vector';
