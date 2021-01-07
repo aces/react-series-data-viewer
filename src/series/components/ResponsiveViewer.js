@@ -94,6 +94,7 @@ const ResponsiveViewer = ({
       style={{position: 'relative', width: '100%', height: '100%'}}
     >
       <Canvas
+        invalidateFrameloop
         style={{position: 'absolute'}}
         transparent={transparent.toString()}
         width={width}
