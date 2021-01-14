@@ -13,6 +13,7 @@ export const fetchChunk = (url: string): Promise<FloatChunk> => {
           index: parsed.getIndex(),
           cutoff: parsed.getCutoff(),
           downsampling: parsed.getDownsampling(),
+          originalValues: parsed.getSamplesList(),
           values: parsed.getSamplesList(),
         });
       });

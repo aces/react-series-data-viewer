@@ -2,7 +2,9 @@
 
 export type Chunk = {
   index: number,
+  originalValues: number[],
   values: number[],
+  filters: string[],
   downsampling: number,
   interval: [number, number],
   cutoff: number

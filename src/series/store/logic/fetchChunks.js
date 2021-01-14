@@ -26,6 +26,18 @@ type FetchedChunks = {
 
 export const loadChunks = ({channelIndex, ...rest}: FetchedChunks) => {
   return (dispatch: any => void) => {
+    let filters = window.EEGLabSeriesProviderStore.getState().filters;
+    rest.chunks.forEach((chunk, index, chunks) => {
+      chunk.filters = [];
+      chunks[index].values = Object.values(filters).reduce(
+        (signal, filter) => {
+          chunks[index].filters.push(filter.name);
+          return filter.fn(signal);
+        },
+        chunk.originalValues
+      );
+    });
+
     dispatch(setActiveChannel(channelIndex));
     dispatch(setChunks({channelIndex, ...rest}));
     dispatch(setActiveChannel(null));

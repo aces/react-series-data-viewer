@@ -4,16 +4,19 @@ import * as R from 'ramda';
 import {combineReducers} from 'redux';
 import {combineEpics} from 'redux-observable';
 import {boundsReducer} from './state/bounds';
+import {filtersReducer} from './state/filters';
 import {datasetReducer} from './state/dataset';
 import {cursorReducer} from './state/cursor';
 import {montageReducer} from './state/montage';
-import {createDragBoundsEpic} from './logic/drag-bounds';
-import {createFetchChunksEpic} from './logic/fetch-chunks';
+import {createDragBoundsEpic} from './logic/dragBounds';
+import {createFetchChunksEpic} from './logic/fetchChunks';
 import {createPaginationEpic} from './logic/pagination';
-import {createScaleAmplitudesEpic, createResetAmplitudesEpic} from './logic/scale-amplitudes';
+import {createScaleAmplitudesEpic, createResetAmplitudesEpic} from './logic/scaleAmplitudes';
+import {createLowPassFilterEpic, createHighPassFilterEpic} from './logic/highLowPass';
 
 export const rootReducer = combineReducers({
   bounds: boundsReducer,
+  filters: filtersReducer,
   dataset: datasetReducer,
   cursor: cursorReducer,
   montage: montageReducer,
@@ -33,5 +36,7 @@ export const rootEpic = combineEpics(
     const {amplitudeScale} = bounds;
     return amplitudeScale;
   }),
-  createResetAmplitudesEpic()
+  createResetAmplitudesEpic(),
+  createLowPassFilterEpic(),
+  createHighPassFilterEpic()
 );

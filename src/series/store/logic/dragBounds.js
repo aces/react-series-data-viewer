@@ -6,7 +6,7 @@ import * as Rx from 'rxjs/operators';
 import {ofType} from 'redux-observable';
 import {createAction} from 'redux-actions';
 import {SET_INTERVAL, setInterval} from '../state/bounds';
-import {updateViewedChunks} from './fetch-chunks';
+import {updateViewedChunks} from './fetchChunks';
 
 import type {
   State as BoundsState,

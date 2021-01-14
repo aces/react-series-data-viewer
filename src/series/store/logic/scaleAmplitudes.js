@@ -7,7 +7,7 @@ import {ofType} from 'redux-observable';
 import {createAction} from 'redux-actions';
 import {setAmplitudeScale} from '../state/bounds';
 import type {State} from '../state/bounds';
-import {updateViewedChunks} from './fetch-chunks';
+import {updateViewedChunks} from './fetchChunks';
 
 export const SET_AMPLITUDES_SCALE = 'SET_AMPLITUDES_SCALE';
 export const setAmplitudesScale = createAction(SET_AMPLITUDES_SCALE);

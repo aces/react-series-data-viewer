@@ -16,7 +16,8 @@ import SeriesCursor from './SeriesCursor';
 import RenderLayer from './RenderLayer';
 import {setCursor} from '../store/state/cursor';
 import {setOffsetIndex} from '../store/logic/pagination';
-import {setAmplitudesScale, resetAmplitudesScale} from '../store/logic/scale-amplitudes';
+import {setAmplitudesScale, resetAmplitudesScale} from '../store/logic/scaleAmplitudes';
+import {LOW_PASS_FILTERS, setLowPassFilter, HIGH_PASS_FILTERS, setHighPassFilter} from '../store/logic/highLowPass';
 
 import type {
   ChannelMetadata,
@@ -38,6 +39,8 @@ type Props = {
   offsetIndex: number,
   setOffsetIndex: number => void,
   setAmplitudesScale: number => void,
+  setLowPassFilter: string => void,
+  setHighPassFilter: string => void,
   limit: number
 };
 
@@ -56,6 +59,8 @@ const SeriesRenderer = ({
   setOffsetIndex,
   setAmplitudesScale,
   resetAmplitudesScale,
+  setLowPassFilter,
+  setHighPassFilter,
   limit,
 }: Props) => {
   const topLeft = vec2.fromValues(
@@ -124,6 +129,7 @@ const SeriesRenderer = ({
       </Object2D>
     );
   };
+
   const ChannelAxesLayer = ({viewerWidth, viewerHeight}) => {
     const axisHeight = viewerHeight / filteredChannels.length;
     return (
@@ -144,6 +150,7 @@ const SeriesRenderer = ({
       </Group>
     );
   };
+
   const ChannelsLayer = () => {
     return (
       <Object2D position={center} layer={3}>
@@ -218,6 +225,16 @@ const SeriesRenderer = ({
     );
   };
 
+  const highPassFilters = Object.keys(HIGH_PASS_FILTERS).map((key) =>
+    <option value={key} key={key}>{HIGH_PASS_FILTERS[key].label}</option>
+  );
+
+  const lowPassFilters = Object.keys(LOW_PASS_FILTERS).map((key) =>
+    <option value={key} key={key}>{LOW_PASS_FILTERS[key].label}</option>
+  );
+
+  const hardLimit = Math.min(offsetIndex + limit - 1, channelMetadata.length);
+
   return channels.length > 0 ? (
     <Container fluid style={{height: '100%'}}>
       <Row style={{height: '100%'}}>
@@ -232,6 +249,24 @@ const SeriesRenderer = ({
                     <Button onClick={() => resetAmplitudesScale()}>Reset</Button>
                     <Button onClick={() => setAmplitudesScale(0.9)}>+</Button>
                   </ButtonGroup>
+                </Col>
+                <Col xs={2}>
+                  <Input
+                    type="select"
+                    name="highPassFilters"
+                    onChange={(e) => setHighPassFilter(e.target.value)}
+                  >
+                    {highPassFilters}
+                  </Input>
+                </Col>
+                <Col xs={2}>
+                  <Input
+                    type="select"
+                    name="lowPassFilters"
+                    onChange={(e) => setLowPassFilter(e.target.value)}
+                  >
+                    {lowPassFilters}
+                  </Input>
                 </Col>
                 <Col xs={2}>
                   <ButtonGroup>
@@ -249,7 +284,7 @@ const SeriesRenderer = ({
                     </Button>
                   </ButtonGroup>
                 </Col>
-                <Col xs={8}>
+                <Col xs={4}>
                   Showing{' '}
                   <div style={{display: 'inline-block', width: '80px'}}>
                     <Input
@@ -258,7 +293,7 @@ const SeriesRenderer = ({
                       onChange={(e) => setOffsetIndex(e.target.value)}
                     />
                   </div>{' '}
-                  to {offsetIndex + limit} of {channelMetadata.length}
+                  to {hardLimit} of {channelMetadata.length}
                 </Col>
               </Row>
             </Col>
@@ -335,7 +370,7 @@ SeriesRenderer.defaultProps = {
   epochs: [],
   hidden: [],
   channelMetadata: [],
-  offsetIndex: 0,
+  offsetIndex: 1,
   limit: 6,
 };
 
@@ -369,6 +404,14 @@ export default connect(
     resetAmplitudesScale: R.compose(
       dispatch,
       resetAmplitudesScale
+    ),
+    setLowPassFilter: R.compose(
+      dispatch,
+      setLowPassFilter
+    ),
+    setHighPassFilter: R.compose(
+      dispatch,
+      setHighPassFilter
     ),
   })
 )(SeriesRenderer);

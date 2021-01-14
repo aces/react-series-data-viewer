@@ -9,7 +9,7 @@ export const setChunks = createAction(SET_CHUNKS);
 
 export type Action = {
   type: 'SET_CHUNKS',
-  payload: {traceIndex: number, chunks: Chunk[] }
+  payload: {traceIndex: number, chunks: Chunk[]}
 };
 
 export type State = Channel;

@@ -11,7 +11,7 @@ import {
   setDatasetMetadata,
   setChannels,
 } from '../state/dataset';
-import {updateViewedChunks} from './fetch-chunks';
+import {updateViewedChunks} from './fetchChunks';
 
 export const SET_OFFSET_INDEX = 'SET_OFFSET_INDEX';
 export const setOffsetIndex = createAction(SET_OFFSET_INDEX);
@@ -36,13 +36,14 @@ export const createPaginationEpic = (fromState: any => State) => (
       const {limit, channelMetadata, channels} = fromState(state);
 
       const offsetIndex = Math.min(
-        Math.max(payload, 0),
-        channelMetadata.length - 1
+        Math.max(payload, 1),
+        channelMetadata.length
       );
 
-      let channelIndex = offsetIndex;
+      let channelIndex = offsetIndex - 1;
+
       const newChannels = [];
-      const hardLimit = Math.min(offsetIndex + limit, channelMetadata.length);
+      const hardLimit = Math.min(offsetIndex + limit - 1, channelMetadata.length);
       while (channelIndex < hardLimit) {
         // TODO: need to handle multiple traces using shapes
         const channel =
