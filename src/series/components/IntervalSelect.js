@@ -12,7 +12,7 @@ import {
   startDragInterval,
   continueDragInterval,
   endDragInterval,
-} from '../store/logic/drag-bounds';
+} from '../store/logic/dragBounds';
 import ResponsiveViewer from './ResponsiveViewer';
 import RenderLayer from './RenderLayer';
 import Object2D from './Object2D';

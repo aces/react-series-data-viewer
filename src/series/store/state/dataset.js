@@ -54,7 +54,7 @@ export const datasetReducer = (
     channelMetadata: [],
     channels: [],
     epochs: [],
-    offsetIndex: 0,
+    offsetIndex: 1,
     limit: 6,
     shapes: [],
     timeInterval: [0, 1],

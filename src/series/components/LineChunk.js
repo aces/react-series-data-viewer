@@ -10,8 +10,8 @@ import Object2D from './Object2D';
 import Line from './Line';
 
 const LineMemo = R.memoizeWith(
-  ({interval, amplitudeScale, channelIndex, traceIndex, chunkIndex}) =>
-    `${interval[0]},${interval[1]},${amplitudeScale}-${channelIndex}-${traceIndex}-${chunkIndex}`,
+  ({interval, amplitudeScale, filters, channelIndex, traceIndex, chunkIndex}) =>
+    `${interval[0]},${interval[1]},${amplitudeScale},${filters.join('-')},${channelIndex}-${traceIndex}-${chunkIndex}`,
   ({
     channelIndex,
     traceIndex,
@@ -19,6 +19,7 @@ const LineMemo = R.memoizeWith(
     interval,
     seriesRange,
     amplitudeScale,
+    filters,
     values,
     ...rest
 }) => {
@@ -39,9 +40,10 @@ const LineMemo = R.memoizeWith(
         scales[1](value)
       )
     );
+
     return (
       <Line
-        cacheKey={`${interval[0]},${interval[1]},${amplitudeScale}-${channelIndex}-${traceIndex}-${chunkIndex}`}
+        cacheKey={`${interval[0]},${interval[1]},${amplitudeScale},${filters.join('-')},${channelIndex}-${traceIndex}-${chunkIndex}`}
         points={points}
         {...rest}
       />
@@ -104,6 +106,7 @@ const LineChunk = ({
         interval={interval}
         seriesRange={seriesRange}
         amplitudeScale={amplitudeScale}
+        filters={chunk.filters}
         color={lineColor}
         {...rest}
       />
