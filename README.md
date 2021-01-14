@@ -1,16 +1,22 @@
-# react-series-data-viewer
+# React series data viewer
 
-[![Travis][build-badge]][build]
-[![npm package][npm-badge]][npm]
-[![Coveralls][coveralls-badge]][coveralls]
+## Main dependencies
 
-Describe react-series-data-viewer here.
+### Ramda (https://ramdajs.com)
+A practical functional library for JavaScript programmers.
 
-[build-badge]: https://img.shields.io/travis/user/repo/master.png?style=flat-square
-[build]: https://travis-ci.org/user/repo
+### Redux (https://redux.js.org)
+A Predictable State Container for JS Apps
 
-[npm-badge]: https://img.shields.io/npm/v/npm-package.png?style=flat-square
-[npm]: https://www.npmjs.org/package/npm-package
+### Three (https://threejs.org)
+JavaScript 3D library
 
-[coveralls-badge]: https://img.shields.io/coveralls/user/repo/master.png?style=flat-square
-[coveralls]: https://coveralls.io/github/user/repo
+### D3 (https://d3js.org)
+JavaScript library for producing dynamic, interactive data visualizations in web browsers. 
+
+### RxJS (https://rxjs-dev.firebaseapp.com/guide/overview)
+RxJS is a library for composing asynchronous and event-based programs by using observable sequences. 
+It provides one core type, the Observable, satellite types (Observer, Schedulers, Subjects) and operators to allow handling asynchronous events as collections.
+
+### flow (https://flow.org)
+A static type checker for javascript.
