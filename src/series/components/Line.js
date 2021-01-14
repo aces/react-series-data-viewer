@@ -2,7 +2,7 @@
 
 import * as R from 'ramda';
 import * as THREE from 'three';
-import type {Vector2} from 'src/vector';
+import type {Vector2} from '../../vector';
 
 const lineGeometry = ({points}) => {
   const geometry = new THREE.Geometry();
@@ -29,7 +29,7 @@ type Props = {
   cacheKey?: any,
   points: Vector2[],
   linewidth: number,
-  color: THREE.Color
+  color: typeof THREE.Color
 };
 
 const Line = ({cacheKey, points, linewidth, color}: Props) => {

@@ -11,8 +11,14 @@ import {montageReducer} from './state/montage';
 import {createDragBoundsEpic} from './logic/dragBounds';
 import {createFetchChunksEpic} from './logic/fetchChunks';
 import {createPaginationEpic} from './logic/pagination';
-import {createScaleAmplitudesEpic, createResetAmplitudesEpic} from './logic/scaleAmplitudes';
-import {createLowPassFilterEpic, createHighPassFilterEpic} from './logic/highLowPass';
+import {
+  createScaleAmplitudesEpic,
+  createResetAmplitudesEpic,
+} from './logic/scaleAmplitudes';
+import {
+  createLowPassFilterEpic,
+  createHighPassFilterEpic,
+} from './logic/highLowPass';
 
 export const rootReducer = combineReducers({
   bounds: boundsReducer,

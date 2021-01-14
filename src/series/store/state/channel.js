@@ -24,7 +24,6 @@ export const channelReducer = (
   switch (action.type) {
     case SET_CHUNKS: {
       return R.assocPath(
-        // $FlowFixMe TODO: ramda types don't allow for number as index
         ['traces', action.payload.traceIndex, 'chunks'],
         action.payload.chunks,
         state

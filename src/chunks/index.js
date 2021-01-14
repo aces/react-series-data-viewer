@@ -2,7 +2,7 @@
 import {FloatChunk} from '../protocol-buffers/chunk_pb';
 import {fetchBlob} from '../ajax';
 
-export const fetchChunk = (url: string): Promise<FloatChunk> => {
+export const fetchChunk = (url: string): Promise<typeof FloatChunk> => {
   return fetchBlob(url).then((blob) => {
     const reader = new FileReader();
     reader.readAsArrayBuffer(blob);

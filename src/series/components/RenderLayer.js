@@ -5,7 +5,7 @@ import type {Node} from 'react';
 export type Props = {
   svg?: boolean,
   three?: boolean,
-  children?: Node
+  children: Node
 };
 
 const RenderLayer = ({children}: Props) => {

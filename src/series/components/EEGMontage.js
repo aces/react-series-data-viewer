@@ -7,8 +7,8 @@ import {scaleLinear} from "d3-scale";
 import {Group} from "@vx/vx";
 import ResponsiveViewer from "./ResponsiveViewer";
 import RenderLayer from "./RenderLayer";
-import type { Electrode} from "src/series/store/types";
-import {setHidden} from "src/series/store/state/montage";
+import type { Electrode} from "../../series/store/types";
+import {setHidden} from "../../series/store/state/montage";
 
 type Props = {
   electrodes: Electrode[],

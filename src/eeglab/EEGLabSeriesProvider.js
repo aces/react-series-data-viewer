@@ -26,7 +26,6 @@ class EEGLabSeriesProvider extends Component {
     super(props);
     const epicMiddleware = createEpicMiddleware();
 
-    // $FlowFixMe There is a problem with the type definitions of redux's createStore function.
     this.store = createStore(
       rootReducer,
       applyMiddleware(thunk, epicMiddleware)

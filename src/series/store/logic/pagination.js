@@ -43,7 +43,10 @@ export const createPaginationEpic = (fromState: any => State) => (
       let channelIndex = offsetIndex - 1;
 
       const newChannels = [];
-      const hardLimit = Math.min(offsetIndex + limit - 1, channelMetadata.length);
+      const hardLimit = Math.min(
+        offsetIndex + limit - 1,
+        channelMetadata.length
+      );
       while (channelIndex < hardLimit) {
         // TODO: need to handle multiple traces using shapes
         const channel =

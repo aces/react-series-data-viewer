@@ -11,7 +11,8 @@ import Line from './Line';
 
 const LineMemo = R.memoizeWith(
   ({interval, amplitudeScale, filters, channelIndex, traceIndex, chunkIndex}) =>
-    `${interval[0]},${interval[1]},${amplitudeScale},${filters.join('-')},${channelIndex}-${traceIndex}-${chunkIndex}`,
+    `${interval.join(',')},${amplitudeScale},${filters.join('-')},`
+  + `${channelIndex}-${traceIndex}-${chunkIndex}`,
   ({
     channelIndex,
     traceIndex,
@@ -43,7 +44,10 @@ const LineMemo = R.memoizeWith(
 
     return (
       <Line
-        cacheKey={`${interval[0]},${interval[1]},${amplitudeScale},${filters.join('-')},${channelIndex}-${traceIndex}-${chunkIndex}`}
+        cacheKey={
+          `${interval.join(',')},${amplitudeScale},${filters.join('-')},`
+        + `${channelIndex}-${traceIndex}-${chunkIndex}`
+        }
         points={points}
         {...rest}
       />
@@ -59,7 +63,7 @@ type Props = {
   seriesRange: [number, number],
   amplitudeScale: number,
   scales: [any, any],
-  color?: THREE.Color
+  color?: typeof THREE.Color
 };
 
 const LineChunk = ({
@@ -99,6 +103,7 @@ const LineChunk = ({
       scale={new THREE.Vector3(chunkLength, chunkHeight, 1)}
     >
       <LineMemo
+        {...rest}
         channelIndex={channelIndex}
         traceIndex={traceIndex}
         chunkIndex={chunkIndex}
@@ -108,7 +113,6 @@ const LineChunk = ({
         amplitudeScale={amplitudeScale}
         filters={chunk.filters}
         color={lineColor}
-        {...rest}
       />
     </Object2D>
   );

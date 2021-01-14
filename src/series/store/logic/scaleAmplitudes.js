@@ -6,7 +6,6 @@ import * as Rx from 'rxjs/operators';
 import {ofType} from 'redux-observable';
 import {createAction} from 'redux-actions';
 import {setAmplitudeScale} from '../state/bounds';
-import type {State} from '../state/bounds';
 import {updateViewedChunks} from './fetchChunks';
 
 export const SET_AMPLITUDES_SCALE = 'SET_AMPLITUDES_SCALE';
@@ -15,7 +14,7 @@ export const RESET_AMPLITUDES_SCALE = 'RESET_AMPLITUDES_SCALE';
 export const resetAmplitudesScale = createAction(RESET_AMPLITUDES_SCALE);
 export type Action = ((any) => void) => void;
 
-export const createScaleAmplitudesEpic = (fromState: any => State) => (
+export const createScaleAmplitudesEpic = (fromState: any => number) => (
   action$: Observable<any>,
   state$: Observable<any>
 ): Observable<Action> => {
@@ -28,16 +27,15 @@ export const createScaleAmplitudesEpic = (fromState: any => State) => (
       const amplitudeScale = fromState(state);
 
       return (dispatch) => {
-        dispatch(setAmplitudeScale(scale*amplitudeScale));
+        dispatch(setAmplitudeScale(scale * amplitudeScale));
         dispatch(updateViewedChunks());
       };
     })
   );
 };
 
-export const createResetAmplitudesEpic = (fromState: any => State) => (
+export const createResetAmplitudesEpic = () => (
   action$: Observable<any>,
-  state$: Observable<any>
 ): Observable<Action> => {
   return action$.pipe(
     ofType(RESET_AMPLITUDES_SCALE),

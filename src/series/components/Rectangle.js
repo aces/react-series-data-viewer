@@ -3,7 +3,7 @@
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
 import * as THREE from 'three';
-import type {Vector2} from 'src/vector';
+import type {Vector2} from '../../vector';
 import Object2D from './Object2D';
 
 const RectMesh = ({color, opacity, ...rest}) => {
@@ -16,7 +16,7 @@ const RectMesh = ({color, opacity, ...rest}) => {
     side: THREE.DoubleSide,
   });
 
-  return <mesh geometry={geometry} material={material} {...rest} />;
+  return <mesh {...rest} geometry={geometry} material={material} />;
 };
 
 const RectMeshMemo = R.memoizeWith(
@@ -28,7 +28,7 @@ type Props = {
   cacheKey?: string,
   start: Vector2,
   end: Vector2,
-  color: THREE.Color,
+  color: typeof THREE.Color,
   opacity: number
 };
 
@@ -55,9 +55,9 @@ const Rectangle = ({
       }
     >
       {cacheKey ? (
-        <RectMeshMemo color={color} opacity={opacity} {...rest} />
+        <RectMeshMemo {...rest} color={color} opacity={opacity} />
       ) : (
-        <RectMesh color={color} opacity={opacity} {...rest} />
+        <RectMesh {...rest} color={color} opacity={opacity} />
       )}
     </Object2D>
   );

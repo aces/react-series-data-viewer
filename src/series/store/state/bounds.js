@@ -23,46 +23,32 @@ export type State = {
 };
 
 const interval = (state = [0.25, 0.75], action: ?Action): [number, number] => {
-  if (!action) {
-    return state;
+  if (action && action.type === 'SET_INTERVAL') {
+    return action ? action.payload : state;
   }
-  switch (action.type) {
-    case SET_INTERVAL: {
-      return action ? action.payload : state;
-    }
-    default: {
-      return state;
-    }
-  }
+  return state;
 };
 
 const domain = (state = [0, 1], action: ?Action): [number, number] => {
-  switch (action && action.type) {
-    case SET_DOMAIN: {
-      return action ? action.payload : state;
-    }
-    default: {
-      return state;
-    }
+  if (action && action.type === 'SET_DOMAIN') {
+    return action ? action.payload : state;
   }
+  return state;
 };
 
-const amplitudeScale = (state = 1, action: ?Action): [number, number] => {
-  if (!action) {
-    return state;
+const amplitudeScale = (state = 1, action: ?Action): number => {
+  if (action && action.type === 'SET_AMPLITUDE_SCALE') {
+    return action ? action.payload : state;
   }
-  switch (action.type) {
-    case SET_AMPLITUDE_SCALE: {
-      return action ? action.payload : state;
-    }
-    default: {
-      return state;
-    }
-  }
+  return state;
 };
 
 export const boundsReducer: (State, Action) => State = (
-  state = {interval: interval(), domain: domain(), amplitudeScale: amplitudeScale()},
+  state = {
+    interval: interval(),
+    domain: domain(),
+    amplitudeScale: amplitudeScale(),
+  },
   action
 ) => ({
   interval: interval(state.interval, action),

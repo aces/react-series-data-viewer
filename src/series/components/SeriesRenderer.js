@@ -16,8 +16,16 @@ import SeriesCursor from './SeriesCursor';
 import RenderLayer from './RenderLayer';
 import {setCursor} from '../store/state/cursor';
 import {setOffsetIndex} from '../store/logic/pagination';
-import {setAmplitudesScale, resetAmplitudesScale} from '../store/logic/scaleAmplitudes';
-import {LOW_PASS_FILTERS, setLowPassFilter, HIGH_PASS_FILTERS, setHighPassFilter} from '../store/logic/highLowPass';
+import {
+  setAmplitudesScale,
+  resetAmplitudesScale,
+} from '../store/logic/scaleAmplitudes';
+import {
+  LOW_PASS_FILTERS,
+  setLowPassFilter,
+  HIGH_PASS_FILTERS,
+  setHighPassFilter,
+} from '../store/logic/highLowPass';
 
 import type {
   ChannelMetadata,
@@ -39,6 +47,7 @@ type Props = {
   offsetIndex: number,
   setOffsetIndex: number => void,
   setAmplitudesScale: number => void,
+  resetAmplitudesScale: void => void,
   setLowPassFilter: string => void,
   setHighPassFilter: string => void,
   limit: number
@@ -119,8 +128,8 @@ const SeriesRenderer = ({
           filteredEpochs.map((epoch, i) => {
             return (
               <Epoch
-                key={`${i}-${epochs.length}`}
                 {...epoch}
+                key={`${i}-${epochs.length}`}
                 scales={scales}
                 opacity={0.3}
               />
@@ -245,9 +254,15 @@ const SeriesRenderer = ({
               <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
                 <Col xs={2}>
                   <ButtonGroup>
-                    <Button onClick={() => setAmplitudesScale(1.1)}>-</Button>
-                    <Button onClick={() => resetAmplitudesScale()}>Reset</Button>
-                    <Button onClick={() => setAmplitudesScale(0.9)}>+</Button>
+                    <Button
+                      onClick={() => setAmplitudesScale(1.1)}
+                    >-</Button>
+                    <Button
+                      onClick={() => resetAmplitudesScale()}
+                    >Reset</Button>
+                    <Button
+                      onClick={() => setAmplitudesScale(0.9)}
+                    >+</Button>
                   </ButtonGroup>
                 </Col>
                 <Col xs={2}>

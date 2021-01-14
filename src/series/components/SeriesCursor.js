@@ -7,20 +7,23 @@ import {colorOrder} from '../../color';
 import type {Channel} from '../store/types';
 
 type CursorContentProps = {
-  cursor: number,
+  time: number,
   channel: Channel,
-  contentIndex: number
+  contentIndex: number,
+  showMarker: boolean
 };
 
 type Props = {
   cursor: number,
   channels: Channel[],
   CursorContent: CursorContentProps => Node,
-  interval: [Number, Number],
+  interval: [number, number],
   showMarker: boolean
 };
 
-const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: Props) => {
+const SeriesCursor = (
+  {cursor, channels, CursorContent, interval, showMarker}: Props
+) => {
   const left = Math.min(Math.max(100 * cursor, 0), 100) + '%';
   const time = interval[0] + cursor * (interval[1] - interval[0]);
 
@@ -54,7 +57,12 @@ const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: P
           key={`${channel.index}-${channels.length}`}
           style={{margin: 'auto'}}
         >
-          <CursorContent time={time} channel={channel} contentIndex={i} showMarker={showMarker} />
+          <CursorContent
+            time={time}
+            channel={channel}
+            contentIndex={i}
+            showMarker={showMarker}
+          />
         </div>
       ))}
     </div>
@@ -92,7 +100,10 @@ const SeriesCursor = ({cursor, channels, CursorContent, interval, showMarker}: P
   );
 };
 
-const createIndices = R.memoize((array) => array.map((_, i) => i));
+const createIndices = R.memoizeWith(
+  R.identity,
+  (array) => array.map((_, i) => i)
+);
 
 const indexToTime = (chunk) => (index) =>
   chunk.interval[0] +

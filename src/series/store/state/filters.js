@@ -11,12 +11,15 @@ export type Action = {
   payload: {
     key: string,
     name: string,
-    filter: (number[]) => number[],
+    fn: (number[]) => number[],
   }
 };
 
 export const filtersReducer = (
-  state = {},
+  state: {[key: string]: {
+    name: string,
+    fn: (number[]) => number[]
+  }} = {},
   action: ?Action
 ): any => {
   if (!action) {

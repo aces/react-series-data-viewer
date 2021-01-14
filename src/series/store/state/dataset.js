@@ -86,7 +86,6 @@ export const datasetReducer = (
         return state;
       }
       return R.assocPath(
-        // $FlowFixMe TODO: ramda types don't allow for number as index
         ['channels', activeIndex],
         channelReducer(state.channels[activeIndex], (action: any)),
         state

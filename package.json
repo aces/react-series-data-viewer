@@ -11,20 +11,6 @@
     "lib",
     "umd"
   ],
-  "scripts": {
-    "build": "nwb build-react-component --no-demo",
-    "clean": "nwb clean-module && nwb clean-demo",
-    "prepublishOnly": "npm run build",
-    "deploy": "npm run build && gh-pages -d demo/dist",
-    "start": "nwb serve-react-demo",
-    "test": "nwb test-react",
-    "test:coverage": "nwb test-react --coverage",
-    "test:watch": "nwb test-react --server",
-    "protoc:python": "echo `pwd`; protoc --python_out='python/' protocol-buffers/chunk.proto",
-    "protoc:js": "protoc --js_out=import_style=commonjs,binary:src/ protocol-buffers/chunk.proto",
-    "protoc:all": "npm run protoc:python; npm run protoc:js",
-    "flow": "flow"
-  },
   "dependencies": {
     "@hocs/with-resize-observer-props": "^0.5.0",
     "@vx/vx": "0.0.181",
@@ -36,7 +22,6 @@
     "differenceequationsignal1d": "^0.1.1",
     "gl-matrix": "^2.8.1",
     "google-protobuf": "^3.6.1",
-    "immutable": "^3.8.2",
     "prop-types": "^15.6.2",
     "ramda": "^0.25.0",
     "react-redux": "^7.2.1",
@@ -49,10 +34,11 @@
     "redux-observable": "^1.0.0",
     "redux-thunk": "^2.3.0",
     "resize-observer-polyfill": "^1.5.0",
-    "rxjs": "^6.3.3",
+    "rxjs": "^6.6.3",
     "three": "^0.119.1"
   },
   "devDependencies": {
+    "@babel/preset-flow": "^7.12.1",
     "babel-eslint": "^10.0.1",
     "babel-plugin-flow-react-proptypes": "^24.1.2",
     "babel-plugin-module-resolver": "^3.1.1",
@@ -64,9 +50,8 @@
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-react": "^7.11.1",
-    "flow-bin": "^0.78.0",
+    "flow-bin": "^0.123.0",
     "flow-typed": "^2.5.1",
-    "gh-pages": "^2.0.1",
     "prettier": "^1.12.1",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
@@ -74,7 +59,7 @@
   },
   "author": "",
   "license": "MIT",
-  "repository": "https://github.com/mcin-armintaheri-archive/react-series-data-viewer",
+  "repository": "https://github.com/aces/react-series-data-viewer",
   "keywords": [
     "react-component"
   ]

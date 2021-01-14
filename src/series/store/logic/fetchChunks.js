@@ -29,7 +29,7 @@ export const loadChunks = ({channelIndex, ...rest}: FetchedChunks) => {
     let filters = window.EEGLabSeriesProviderStore.getState().filters;
     rest.chunks.forEach((chunk, index, chunks) => {
       chunk.filters = [];
-      chunks[index].values = Object.values(filters).reduce(
+      chunks[index].values = (Object.values(filters) : any).reduce(
         (signal, filter) => {
           chunks[index].filters.push(filter.name);
           return filter.fn(signal);
@@ -39,12 +39,13 @@ export const loadChunks = ({channelIndex, ...rest}: FetchedChunks) => {
     });
 
     dispatch(setActiveChannel(channelIndex));
-    dispatch(setChunks({channelIndex, ...rest}));
+    dispatch(setChunks({...rest, channelIndex}));
     dispatch(setActiveChannel(null));
   };
 };
 
-export const fetchChunkAt = R.memoize(
+export const fetchChunkAt = R.memoizeWith(
+  R.identity,
   (
     baseURL: string,
     downsampling: number,
@@ -67,7 +68,6 @@ export const createFetchChunksEpic = (fromState: any => State) => (
   action$: Observable<any>,
   state$: Observable<any>
 ): Observable<DatasetAction> => {
-  // $FlowFixMe TODO: why is this type check failing?
   return action$.pipe(
     ofType(UPDATE_VIEWED_CHUNKS),
     Rx.withLatestFrom(state$),
@@ -150,7 +150,7 @@ export const createFetchChunksEpic = (fromState: any => State) => (
         })
       );
 
-      return from(fetches).pipe(Rx.flatMap(R.identity));
+      return from(fetches).pipe(Rx.mergeMap(R.identity));
     }),
     Rx.map((payload) => loadChunks(payload))
   );

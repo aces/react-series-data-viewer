@@ -6,7 +6,6 @@ import type {Node} from 'react';
 import {Canvas} from 'react-three-fiber';
 import {scaleLinear} from 'd3-scale';
 import 'resize-observer-polyfill/dist/ResizeObserver.global';
-// $FlowFixMe
 import withResizeObserverProps from '@hocs/with-resize-observer-props';
 import {DEFAULT_VIEW_BOUNDS} from '../../vector';
 import type {Vector2} from '../../vector';

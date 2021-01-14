@@ -11,7 +11,7 @@ type Props = {
   duration: number,
   type: string,
   scales: [any, any],
-  color: THREE.Color,
+  color: typeof THREE.Color,
   opacity: number
 };
 

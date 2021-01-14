@@ -11,7 +11,7 @@ export const SET_HIDDEN = 'SET_HIDDEN';
 export const setHidden = createAction(SET_HIDDEN);
 
 export type Action =
-  | {type: 'SET_MONTAGE', payload: Electrode[]}
+  | {type: 'SET_ELECTRODES', payload: Electrode[]}
   | {type: 'SET_HIDDEN', payload: number[]};
 
 export type State = {
