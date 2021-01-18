@@ -29,21 +29,37 @@ export const createDragBoundsEpic = (fromState: any => BoundsState) => (
   action$: Observable<any>,
   state$: Observable<any>
 ): Observable<Action> => {
+  let selectedEnd = null;
+
   const startDrag$ = action$.pipe(
     ofType(START_DRAG_INTERVAL),
     Rx.map(R.prop('payload'))
   );
+
   const continueDrag$ = action$.pipe(
     ofType(CONTINUE_DRAG_INTERVAL),
     Rx.map(R.prop('payload'))
   );
-  const endDrag$ = action$.pipe(ofType(END_DRAG_INTERVAL));
+
+  const endDrag$ = action$.pipe(
+    ofType(END_DRAG_INTERVAL),
+    Rx.map(() => {
+      selectedEnd = null;
+    })
+  );
+
   const computeNewInterval = ([position, state]) => {
     const {interval, domain} = R.clone(fromState(state));
     const x = position * domain[1];
     const minSize = Math.abs(domain[1] - domain[0]) * MIN_INTERVAL_FACTOR;
-    const [i0, i1] =
-      Math.abs(x - interval[0]) < Math.abs(x - interval[1])
+
+    if (selectedEnd === null) {
+      selectedEnd = Math.abs(x - interval[0]) < Math.abs(x - interval[1])
+        ? 0
+        : 1;
+    }
+
+    const [i0, i1] = selectedEnd === 0
         ? [0, 1]
         : [1, 0];
 
@@ -53,6 +69,7 @@ export const createDragBoundsEpic = (fromState: any => BoundsState) => (
       sign > 0
         ? Math.min(interval[i1] - minSize - interval[i0], 0)
         : Math.max(interval[i1] + minSize - interval[i0], 0);
+
     return setInterval(interval);
   };
 

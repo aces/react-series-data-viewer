@@ -24,21 +24,21 @@ export type State = {
 
 const interval = (state = [0.25, 0.75], action: ?Action): [number, number] => {
   if (action && action.type === 'SET_INTERVAL') {
-    return action ? action.payload : state;
+    return action.payload;
   }
   return state;
 };
 
 const domain = (state = [0, 1], action: ?Action): [number, number] => {
   if (action && action.type === 'SET_DOMAIN') {
-    return action ? action.payload : state;
+    return action.payload;
   }
   return state;
 };
 
 const amplitudeScale = (state = 1, action: ?Action): number => {
   if (action && action.type === 'SET_AMPLITUDE_SCALE') {
-    return action ? action.payload : state;
+    return action.payload;
   }
   return state;
 };

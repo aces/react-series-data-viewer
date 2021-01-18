@@ -12,6 +12,7 @@ import type {Vector2} from '../../vector';
 
 type Props = {
   onRef?: any,
+  name: string,
   containerWidth: number,
   containerHeight: number,
   transparent: boolean,
@@ -23,6 +24,7 @@ type Props = {
 
 const ResponsiveViewer = ({
   onRef,
+  name,
   containerWidth,
   containerHeight,
   transparent,
@@ -31,17 +33,16 @@ const ResponsiveViewer = ({
   mouseUp,
   children,
 }: Props) => {
-  const width = containerWidth;
-  const height = containerHeight;
-
-  DEFAULT_VIEW_BOUNDS.x[0] = -width/2;
-  DEFAULT_VIEW_BOUNDS.x[1] = width/2;
-  DEFAULT_VIEW_BOUNDS.y[0] = -height/2;
-  DEFAULT_VIEW_BOUNDS.y[1] = height/2;
+  if (name === 'series') {
+    DEFAULT_VIEW_BOUNDS.x[0] = -containerWidth/2;
+    DEFAULT_VIEW_BOUNDS.x[1] = containerWidth/2;
+    DEFAULT_VIEW_BOUNDS.y[0] = -containerHeight/2;
+    DEFAULT_VIEW_BOUNDS.y[1] = containerHeight/2;
+  }
 
   const provision = (layer) =>
     React.Children.map(layer.props.children, (child) =>
-      React.cloneElement(child, {viewerWidth: width, viewerHeight: height})
+      React.cloneElement(child, {viewerWidth: containerWidth, viewerHeight: containerHeight})
     );
 
   const layers = React.Children.toArray(children);
@@ -90,27 +91,31 @@ const ResponsiveViewer = ({
         mouseUp,
         eventToPosition
       )}
+      onMouseLeave={R.compose(
+        mouseUp,
+        eventToPosition
+      )}
       style={{position: 'relative', width: '100%', height: '100%'}}
     >
       <Canvas
         invalidateFrameloop
         style={{position: 'absolute'}}
         transparent={transparent.toString()}
-        width={width}
-        height={height}
+        width={containerWidth}
+        height={containerHeight}
         orthographic
         camera={{
-          left: DEFAULT_VIEW_BOUNDS.x[0],
-          right: DEFAULT_VIEW_BOUNDS.x[1],
-          bottom: DEFAULT_VIEW_BOUNDS.y[0],
-          top: DEFAULT_VIEW_BOUNDS.y[1],
+          left: -containerWidth/2,
+          right: containerWidth/2,
+          bottom: -containerHeight/2,
+          top: containerHeight/2,
         }}
       >
         {threeLayers.length > 0 && (
           <scene
             pointerEvents={['onMouseDown', 'onMouseMove', 'onMouseUp']}
-            width={width}
-            height={height}
+            width={containerWidth}
+            height={containerHeight}
           >
             {threeLayers}
           </scene>
@@ -118,8 +123,8 @@ const ResponsiveViewer = ({
       </Canvas>
       <svg
         style={{position: 'absolute', pointerEvents: 'none'}}
-        width={width}
-        height={height}
+        width={containerWidth}
+        height={containerHeight}
       >
         {svgLayers}
       </svg>
@@ -128,6 +133,7 @@ const ResponsiveViewer = ({
 };
 
 ResponsiveViewer.defaultProps = {
+  name: '',
   containerWidth: 400,
   containerHeight: 300,
   transparent: false,

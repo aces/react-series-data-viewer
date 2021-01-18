@@ -42,6 +42,7 @@ const IntervalSelect = ({
     DEFAULT_VIEW_BOUNDS.x[1],
     DEFAULT_VIEW_BOUNDS.y[0]
   );
+
   const center = vec2.create();
   vec2.add(center, topLeft, bottomRight);
   vec2.scale(center, center, 1 / 2);

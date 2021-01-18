@@ -34,9 +34,7 @@ import type {
 } from '../store/types';
 
 type Props = {
-  domain: [number, number],
   interval: [number, number],
-  seriesRange: [number, number],
   amplitudeScale: number,
   cursor: ?number,
   setCursor: (?number) => void,
@@ -54,9 +52,7 @@ type Props = {
 };
 
 const SeriesRenderer = ({
-  domain,
   interval,
-  seriesRange,
   amplitudeScale,
   cursor,
   setCursor,
@@ -139,7 +135,7 @@ const SeriesRenderer = ({
     );
   };
 
-  const ChannelAxesLayer = ({viewerWidth, viewerHeight}) => {
+  const ChannelAxesLayer = ({viewerHeight}) => {
     const axisHeight = viewerHeight / filteredChannels.length;
     return (
       <Group>
@@ -151,7 +147,7 @@ const SeriesRenderer = ({
               padding={2}
               domain={seriesRange}
               range={[i * axisHeight, (i + 1) * axisHeight]}
-              format={(tick) => ''}
+              format={() => ''}
               orientation='right'
             />
           );
@@ -190,15 +186,15 @@ const SeriesRenderer = ({
           const axisEnd = vec2.create();
           vec2.add(axisEnd, subTopLeft, vec2.fromValues(0.1, subDiagonal[1]));
 
+          const seriesRange = channelMetadata[channel.index].seriesRange;
           const scales = [
             scaleLinear()
               .domain(interval)
               .range([subTopLeft[0], subBottomRight[0]]),
             scaleLinear()
-              .domain(channelMetadata[channel.index].seriesRange)
+              .domain(seriesRange)
               .range([subTopLeft[1], subBottomRight[1]]),
           ];
-          const seriesRange = channelMetadata[channel.index].seriesRange;
 
           return (
             <Object2D
@@ -249,7 +245,7 @@ const SeriesRenderer = ({
       <Row style={{height: '100%'}}>
         <Col xs={12}>
           <Row>
-            <Col xs={2} />
+            <Col xs={2}/>
             <Col xs={10}>
               <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
                 <Col xs={2}>
@@ -307,7 +303,8 @@ const SeriesRenderer = ({
                       value={offsetIndex}
                       onChange={(e) => setOffsetIndex(e.target.value)}
                     />
-                  </div>{' '}
+                  </div>
+                  {' '}
                   to {hardLimit} of {channelMetadata.length}
                 </Col>
               </Row>
@@ -328,7 +325,7 @@ const SeriesRenderer = ({
                   style={{display: 'flex', margin: 'auto'}}
                 >
                   {channelMetadata[channel.index] &&
-                    channelMetadata[channel.index].name}
+                  channelMetadata[channel.index].name}
                 </div>
               ))}
             </Col>
@@ -345,6 +342,7 @@ const SeriesRenderer = ({
                 />
               )}
               <ResponsiveViewer
+                name={'series'}
                 transparent={true}
                 mouseMove={R.compose(
                   setCursor,
@@ -357,11 +355,11 @@ const SeriesRenderer = ({
                     viewerHeight={0}
                     interval={interval}
                   />
-                  <ChannelAxesLayer viewerWidth={0} viewerHeight={0} />
+                  <ChannelAxesLayer viewerHeight={0}/>
                 </RenderLayer>
                 <RenderLayer three>
-                  <EpochsLayer />
-                  <ChannelsLayer />
+                  <EpochsLayer/>
+                  <ChannelsLayer/>
                 </RenderLayer>
               </ResponsiveViewer>
             </Col>
@@ -377,9 +375,7 @@ const SeriesRenderer = ({
 };
 
 SeriesRenderer.defaultProps = {
-  domain: [0, 1],
   interval: [0.25, 0.75],
-  seriesRange: [-1, 2],
   amplitudeScale: 1,
   channels: [],
   epochs: [],
@@ -391,7 +387,6 @@ SeriesRenderer.defaultProps = {
 
 export default connect(
   (state) => ({
-    domain: state.bounds.domain,
     interval: state.bounds.interval,
     amplitudeScale: state.bounds.amplitudeScale,
     cursor: state.cursor,
@@ -399,7 +394,6 @@ export default connect(
     epochs: state.dataset.epochs,
     hidden: state.montage.hidden,
     channelMetadata: state.dataset.channelMetadata,
-    seriesRange: state.dataset.seriesRange,
     offsetIndex: state.dataset.offsetIndex,
   }),
 
