@@ -4,9 +4,8 @@ import * as R from "ramda";
 import React from "react";
 import {connect} from "react-redux";
 import {scaleLinear} from "d3-scale";
-import {Group} from "@vx/vx";
+import {Group} from "@visx/group";
 import ResponsiveViewer from "./ResponsiveViewer";
-import RenderLayer from "./RenderLayer";
 import type { Electrode} from "../../series/store/types";
 import {setHidden} from "../../series/store/state/montage";
 
@@ -30,9 +29,7 @@ const EEGMontage = ({ electrodes, hidden, setHidden }: Props) => {
   };
   return (
     <ResponsiveViewer>
-      <RenderLayer svg>
-        <Group />
-      </RenderLayer>
+      <Group />
     </ResponsiveViewer>
   );
 };

@@ -3,18 +3,14 @@
 import * as R from 'ramda';
 import React from 'react';
 import type {Node} from 'react';
-import {Canvas} from 'react-three-fiber';
 import {scaleLinear} from 'd3-scale';
-import 'resize-observer-polyfill/dist/ResizeObserver.global';
-import withResizeObserverProps from '@hocs/with-resize-observer-props';
-import {DEFAULT_VIEW_BOUNDS} from '../../vector';
+import {withParentSize} from '@visx/responsive';
 import type {Vector2} from '../../vector';
 
 type Props = {
-  onRef?: any,
   name: string,
-  containerWidth: number,
-  containerHeight: number,
+  parentWidth: number,
+  parentHeight: number,
   transparent: boolean,
   mouseDown: Vector2 => void,
   mouseMove: Vector2 => void,
@@ -23,43 +19,29 @@ type Props = {
 };
 
 const ResponsiveViewer = ({
-  onRef,
   name,
-  containerWidth,
-  containerHeight,
+  parentWidth,
+  parentHeight,
   transparent,
   mouseDown,
   mouseMove,
   mouseUp,
   children,
 }: Props) => {
-  if (name === 'series') {
-    DEFAULT_VIEW_BOUNDS.x[0] = -containerWidth/2;
-    DEFAULT_VIEW_BOUNDS.x[1] = containerWidth/2;
-    DEFAULT_VIEW_BOUNDS.y[0] = -containerHeight/2;
-    DEFAULT_VIEW_BOUNDS.y[1] = containerHeight/2;
-  }
-
   const provision = (layer) =>
-    React.Children.map(layer.props.children, (child) =>
-      React.cloneElement(child, {viewerWidth: containerWidth, viewerHeight: containerHeight})
-    );
+    React.cloneElement(layer, {viewerWidth: parentWidth, viewerHeight: parentHeight});
 
-  const layers = React.Children.toArray(children);
-  const svgLayers = layers.filter((layer) => layer.props.svg).map(provision);
-  const threeLayers = layers.filter(
-    (layer) => layer.props.three
-  ).map(provision);
+  const layers = React.Children.toArray(children).map(provision);
 
   const domain = window.EEGLabSeriesProviderStore.getState().bounds.domain;
   const amplitude = [0, 1];
   const eventScale = [
     scaleLinear()
       .domain(domain)
-      .range(DEFAULT_VIEW_BOUNDS.x),
+      .range([-parentWidth/2, parentWidth/2]),
     scaleLinear()
       .domain(amplitude)
-      .range(DEFAULT_VIEW_BOUNDS.y),
+      .range([-parentHeight/2, parentHeight/2]),
   ];
 
   const eventToPosition = (e) => {
@@ -75,10 +57,12 @@ const ResponsiveViewer = ({
     ];
   };
 
+
   return (
-    <div
-      ref={onRef}
-      style={{width: '100%', height: '100%'}}
+    <svg
+      style={{position: 'absolute', overflow: 'hidden'}}
+      width={parentWidth}
+      height={parentHeight}
       onMouseDown={R.compose(
         mouseDown,
         eventToPosition
@@ -95,54 +79,20 @@ const ResponsiveViewer = ({
         mouseUp,
         eventToPosition
       )}
-      style={{position: 'relative', width: '100%', height: '100%'}}
     >
-      <Canvas
-        invalidateFrameloop
-        style={{position: 'absolute'}}
-        transparent={transparent.toString()}
-        width={containerWidth}
-        height={containerHeight}
-        orthographic
-        camera={{
-          left: -containerWidth/2,
-          right: containerWidth/2,
-          bottom: -containerHeight/2,
-          top: containerHeight/2,
-        }}
-      >
-        {threeLayers.length > 0 && (
-          <scene
-            pointerEvents={['onMouseDown', 'onMouseMove', 'onMouseUp']}
-            width={containerWidth}
-            height={containerHeight}
-          >
-            {threeLayers}
-          </scene>
-        )}
-      </Canvas>
-      <svg
-        style={{position: 'absolute', pointerEvents: 'none'}}
-        width={containerWidth}
-        height={containerHeight}
-      >
-        {svgLayers}
-      </svg>
-    </div>
+      {layers}
+    </svg>
   );
 };
 
 ResponsiveViewer.defaultProps = {
   name: '',
-  containerWidth: 400,
-  containerHeight: 300,
+  parentWidth: 400,
+  parentHeight: 300,
   transparent: false,
   mouseMove: () => {},
   mouseDown: () => {},
   mouseUp: () => {},
 };
 
-export default withResizeObserverProps(({width, height}) => ({
-  containerWidth: width,
-  containerHeight: height,
-}))(ResponsiveViewer);
+export default withParentSize(ResponsiveViewer);

@@ -3,11 +3,10 @@
 import * as R from 'ramda';
 import {scaleLinear} from 'd3-scale';
 import {vec2} from 'gl-matrix';
-import * as THREE from 'three';
 import {colorOrder} from '../../color';
 import type {Chunk} from '../store/types';
-import Object2D from './Object2D';
-import Line from './Line';
+import {LinePath} from '@visx/shape';
+import {Group} from '@visx/group';
 
 const LineMemo = R.memoizeWith(
   ({interval, amplitudeScale, filters, channelIndex, traceIndex, chunkIndex}) =>
@@ -22,6 +21,7 @@ const LineMemo = R.memoizeWith(
     amplitudeScale,
     filters,
     values,
+    color,
     ...rest
 }) => {
     const scales = [
@@ -43,12 +43,11 @@ const LineMemo = R.memoizeWith(
     );
 
     return (
-      <Line
-        cacheKey={
-          `${interval.join(',')},${amplitudeScale},${filters.join('-')},`
-        + `${channelIndex}-${traceIndex}-${chunkIndex}`
-        }
-        points={points}
+      <LinePath
+        vectorEffect="non-scaling-stroke"
+        data={points}
+        strokeWidth={1}
+        stroke={color}
         {...rest}
       />
     );
@@ -63,7 +62,7 @@ type Props = {
   seriesRange: [number, number],
   amplitudeScale: number,
   scales: [any, any],
-  color?: typeof THREE.Color
+  color?: string
 };
 
 const LineChunk = ({
@@ -80,12 +79,11 @@ const LineChunk = ({
   const {interval, values} = chunk;
 
   if (values.length === 0) {
-    return <Object2D />;
+    return <Group />;
   }
 
   const range = scales[1].range();
   const chunkLength = Math.abs(scales[0](interval[1]) - scales[0](interval[0]));
-
   const chunkHeight = Math.abs(range[1] - range[0]);
 
   const p0 = vec2.fromValues(
@@ -93,28 +91,32 @@ const LineChunk = ({
     (range[0] + range[1]) / 2
   );
 
-  const lineColor = new THREE.Color(
-    colorOrder(channelIndex) || new THREE.Color('#666')
-  );
+  const lineColor = colorOrder(channelIndex) || '#999';
 
   return (
-    <Object2D
-      position={p0}
-      scale={new THREE.Vector3(chunkLength, chunkHeight, 1)}
+    <Group
+      style={{clipPath: 'url(#lineChunk)'}}
+      top={p0[1]}
     >
-      <LineMemo
-        {...rest}
-        channelIndex={channelIndex}
-        traceIndex={traceIndex}
-        chunkIndex={chunkIndex}
-        values={values}
-        interval={interval}
-        seriesRange={seriesRange}
-        amplitudeScale={amplitudeScale}
-        filters={chunk.filters}
-        color={lineColor}
-      />
-    </Object2D>
+      <Group
+        transform={'translate(' + p0[0] + ' 0)' +
+                   'scale(' + chunkLength + ' ' + chunkHeight + ')'
+        }
+      >
+        <LineMemo
+          {...rest}
+          channelIndex={channelIndex}
+          traceIndex={traceIndex}
+          chunkIndex={chunkIndex}
+          values={values}
+          interval={interval}
+          seriesRange={seriesRange}
+          amplitudeScale={amplitudeScale}
+          filters={chunk.filters}
+          color={lineColor}
+        />
+      </Group>
+    </Group>
   );
 };
 

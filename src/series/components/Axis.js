@@ -1,7 +1,7 @@
 // @flow
 
 import {scaleLinear} from 'd3-scale';
-import {Axis as VxAxis} from '@vx/vx';
+import {Axis as VxAxis} from '@visx/axis';
 
 type Props = {
   orientation: 'top' | 'right' | 'bottom' | 'left',

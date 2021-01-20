@@ -2,24 +2,22 @@
 
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
-import React from 'react';
-import {Group} from '@vx/vx';
+import {Group} from '@visx/group';
 import {connect} from 'react-redux';
-import * as THREE from 'three';
 import {scaleLinear} from 'd3-scale';
-import {DEFAULT_VIEW_BOUNDS} from '../../vector';
 import {
   startDragInterval,
   continueDragInterval,
   endDragInterval,
 } from '../store/logic/dragBounds';
 import ResponsiveViewer from './ResponsiveViewer';
-import RenderLayer from './RenderLayer';
-import Object2D from './Object2D';
 import Axis from './Axis';
-import Rectangle from './Rectangle';
+import {withParentSize} from '@visx/responsive';
+import {hex2rgba} from '../../color';
 
 type Props = {
+  parentWidth: number,
+  parentHeight: number,
   domain: [number, number],
   interval: [number, number],
   dragStart: number => void,
@@ -28,6 +26,8 @@ type Props = {
 };
 
 const IntervalSelect = ({
+  parentWidth,
+  parentHeight,
   domain,
   interval,
   dragStart,
@@ -35,41 +35,50 @@ const IntervalSelect = ({
   dragEnd,
 }: Props) => {
   const topLeft = vec2.fromValues(
-    DEFAULT_VIEW_BOUNDS.x[0],
-    DEFAULT_VIEW_BOUNDS.y[1]
+    -parentWidth/2,
+    parentHeight/2
   );
   const bottomRight = vec2.fromValues(
-    DEFAULT_VIEW_BOUNDS.x[1],
-    DEFAULT_VIEW_BOUNDS.y[0]
+    parentWidth/2,
+    -parentHeight/2
   );
 
-  const center = vec2.create();
-  vec2.add(center, topLeft, bottomRight);
-  vec2.scale(center, center, 1 / 2);
   const scale = scaleLinear()
     .domain(domain)
-    .range(DEFAULT_VIEW_BOUNDS.x);
+    .range([-parentWidth/2, parentWidth/2]);
+
   const ySlice = (x) => ({
     p0: vec2.fromValues(x, topLeft[1]),
     p1: vec2.fromValues(x, bottomRight[1]),
   });
 
+  const leftStart = topLeft[0];
+  const leftEnd = ySlice(scale(interval[0])).p1[0];
+  const leftWidth = Math.abs(leftEnd - leftStart);
+  const leftCenter = (leftStart + leftEnd) / 2;
+
+  const rightStart = ySlice(scale(interval[1])).p0[0];
+  const rightEnd = bottomRight[0];
+  const rightWidth = Math.abs(rightEnd - rightStart);
+  const rightCenter = (rightStart + rightEnd) / 2;
+
   const BackShadowLayer = ({interval}) => (
-    <Object2D position={center} layer={1}>
-      <Rectangle
-        color={new THREE.Color('#aaa')}
-        opacity={0.3}
-        start={vec2.clone(topLeft)}
-        end={ySlice(scale(interval[0])).p1}
+    <svg viewBox={[-parentWidth/2, 0, parentWidth, parentHeight].join(' ')}>
+      <rect
+        fill={hex2rgba({color: '#aaaaaa', alpha: 0.3})}
+        width={leftWidth}
+        height={'100%'}
+        x={leftCenter - leftWidth/2}
       />
-      <Rectangle
-        color={new THREE.Color('#aaa')}
-        opacity={0.3}
-        start={ySlice(scale(interval[1])).p0}
-        end={bottomRight}
+      <rect
+        fill={hex2rgba({color: '#aaaaaa', alpha: 0.3})}
+        width={rightWidth}
+        height={'100%'}
+        x={rightCenter - rightWidth/2}
       />
-    </Object2D>
+    </svg>
   );
+
   const AxisLayer = ({viewerWidth, viewerHeight, domain}) => (
     <Group top={viewerHeight - 1}>
       <Axis domain={domain} range={[0, viewerWidth]} orientation='top' />
@@ -98,38 +107,39 @@ const IntervalSelect = ({
         )(v);
       }}
     >
-      <RenderLayer svg>
-        <AxisLayer viewerWidth={0} viewerHeight={0} domain={domain} />
-      </RenderLayer>
-      <RenderLayer three>
-        <BackShadowLayer interval={interval} />
-      </RenderLayer>
+      <AxisLayer viewerWidth={0} viewerHeight={0} domain={domain} />
+      <BackShadowLayer interval={interval} />
     </ResponsiveViewer>
   );
 };
 
 IntervalSelect.defaultProps = {
+  parentWidth: 400,
+  parentHeight: 50,
   domain: [0, 1],
   interval: [0.25, 0.75],
 };
 
-export default connect(
-  (state) => ({
-    domain: state.bounds.domain,
-    interval: state.bounds.interval,
-  }),
-  (dispatch: any => void) => ({
-    dragStart: R.compose(
-      dispatch,
-      startDragInterval
-    ),
-    dragContinue: R.compose(
-      dispatch,
-      continueDragInterval
-    ),
-    dragEnd: R.compose(
-      dispatch,
-      endDragInterval
-    ),
-  })
+export default R.compose(
+  connect(
+    (state) => ({
+      domain: state.bounds.domain,
+      interval: state.bounds.interval,
+    }),
+    (dispatch: any => void) => ({
+      dragStart: R.compose(
+        dispatch,
+        startDragInterval
+      ),
+      dragContinue: R.compose(
+        dispatch,
+        continueDragInterval
+      ),
+      dragEnd: R.compose(
+        dispatch,
+        endDragInterval
+      ),
+    })
+  ),
+  withParentSize
 )(IntervalSelect);

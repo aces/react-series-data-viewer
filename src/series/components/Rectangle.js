@@ -1,39 +1,18 @@
 // @flow
 
-import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
-import * as THREE from 'three';
 import type {Vector2} from '../../vector';
-import Object2D from './Object2D';
-
-const RectMesh = ({color, opacity, ...rest}) => {
-  const geometry = new THREE.PlaneGeometry(1, 1);
-  const material = new THREE.MeshBasicMaterial({
-    color,
-    opacity,
-    transparent: true,
-    premultipliedAlpha: true,
-    side: THREE.DoubleSide,
-  });
-
-  return <mesh {...rest} geometry={geometry} material={material} />;
-};
-
-const RectMeshMemo = R.memoizeWith(
-  ({cacheKey}) => cacheKey,
-  (props) => <RectMesh {...props} />
-);
+import {hex2rgba} from '../../color';
 
 type Props = {
-  cacheKey?: string,
+  height: string|number,
   start: Vector2,
   end: Vector2,
-  color: typeof THREE.Color,
-  opacity: number
+  color: string,
+  opacity?: number
 };
 
 const Rectangle = ({
-  cacheKey,
   start,
   end,
   color,
@@ -48,23 +27,18 @@ const Rectangle = ({
   vec2.scale(p, p, 1 / 2);
 
   return (
-    <Object2D
-      position={p}
-      scale={
-        new THREE.Vector3(Math.abs(d[0]) + 0.0001, Math.abs(d[1]) + 0.0001, 1)
-      }
-    >
-      {cacheKey ? (
-        <RectMeshMemo {...rest} color={color} opacity={opacity} />
-      ) : (
-        <RectMesh {...rest} color={color} opacity={opacity} />
-      )}
-    </Object2D>
+    <rect
+      fill={hex2rgba({color: color, alpha: opacity})}
+      width={Math.abs(d[0])}
+      height={Math.abs(d[1])}
+      x={p[0] - Math.abs(d[0]/2)}
+      y={p[1]}
+    />
   );
 };
 
 Rectangle.defaultProps = {
-  color: new THREE.Color('#000'),
+  color: '#000000',
   opacity: 1.0,
 };
 

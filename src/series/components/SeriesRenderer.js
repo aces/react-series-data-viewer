@@ -3,17 +3,15 @@
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
 import {Container, Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
-import {Group} from '@vx/vx';
+import {Group} from '@visx/group';
 import {connect} from 'react-redux';
 import {scaleLinear} from 'd3-scale';
-import {DEFAULT_VIEW_BOUNDS, MAX_RENDERED_EPOCHS} from '../../vector';
+import {MAX_RENDERED_EPOCHS} from '../../vector';
 import ResponsiveViewer from './ResponsiveViewer';
-import Object2D from './Object2D';
 import Axis from './Axis';
 import LineChunk from './LineChunk';
 import Epoch from './Epoch';
 import SeriesCursor from './SeriesCursor';
-import RenderLayer from './RenderLayer';
 import {setCursor} from '../store/state/cursor';
 import {setOffsetIndex} from '../store/logic/pagination';
 import {
@@ -26,6 +24,7 @@ import {
   HIGH_PASS_FILTERS,
   setHighPassFilter,
 } from '../store/logic/highLowPass';
+import {withParentSize} from '@visx/responsive';
 
 import type {
   ChannelMetadata,
@@ -34,6 +33,8 @@ import type {
 } from '../store/types';
 
 type Props = {
+  parentWidth: number,
+  parentHeight: number,
   interval: [number, number],
   amplitudeScale: number,
   cursor: ?number,
@@ -52,6 +53,8 @@ type Props = {
 };
 
 const SeriesRenderer = ({
+  parentWidth,
+  parentHeight,
   interval,
   amplitudeScale,
   cursor,
@@ -69,13 +72,13 @@ const SeriesRenderer = ({
   limit,
 }: Props) => {
   const topLeft = vec2.fromValues(
-    DEFAULT_VIEW_BOUNDS.x[0],
-    DEFAULT_VIEW_BOUNDS.y[1]
+    -parentWidth/2,
+    parentHeight/2
   );
 
   const bottomRight = vec2.fromValues(
-    DEFAULT_VIEW_BOUNDS.x[1],
-    DEFAULT_VIEW_BOUNDS.y[0]
+    parentWidth/2,
+    -parentHeight/2
   );
 
   const diagonal = vec2.create();
@@ -90,7 +93,7 @@ const SeriesRenderer = ({
       .domain(interval)
       .range([topLeft[0], bottomRight[0]]),
     scaleLinear()
-      .domain(DEFAULT_VIEW_BOUNDS.y)
+      .domain([-parentHeight/2, parentHeight/2])
       .range([topLeft[1], bottomRight[1]]),
   ];
 
@@ -99,13 +102,11 @@ const SeriesRenderer = ({
   const XAxisLayer = ({viewerWidth, viewerHeight, interval}) => {
     return (
       <Group>
-        <Group>
-          <Axis
-            domain={interval}
-            range={[0, viewerWidth]}
-            orientation='bottom'
-          />
-        </Group>
+        <Axis
+          domain={interval}
+          range={[0, viewerWidth]}
+          orientation='bottom'
+        />
         <Group top={viewerHeight - 1}>
           <Axis domain={interval} range={[0, viewerWidth]} orientation='top' />
         </Group>
@@ -119,7 +120,7 @@ const SeriesRenderer = ({
         epoch.onset + epoch.duration > interval[0] && epoch.onset < interval[1]
     );
     return (
-      <Object2D position={center} layer={2}>
+      <Group>
         {filteredEpochs.length < MAX_RENDERED_EPOCHS &&
           filteredEpochs.map((epoch, i) => {
             return (
@@ -131,7 +132,7 @@ const SeriesRenderer = ({
               />
             );
           })}
-      </Object2D>
+      </Group>
     );
   };
 
@@ -143,8 +144,9 @@ const SeriesRenderer = ({
           const seriesRange = channelMetadata[channel.index].seriesRange;
           return (
             <Axis
+              index={i}
               key={`${channel.index}`}
-              padding={2}
+              padding={10}
               domain={seriesRange}
               range={[i * axisHeight, (i + 1) * axisHeight]}
               format={() => ''}
@@ -156,79 +158,73 @@ const SeriesRenderer = ({
     );
   };
 
-  const ChannelsLayer = () => {
-    return (
-      <Object2D position={center} layer={3}>
-        {filteredChannels.map((channel, i) => {
-          if (!channelMetadata[channel.index]) {
-            return null;
-          }
-          const subTopLeft = vec2.create();
-          vec2.add(
-            subTopLeft,
-            topLeft,
-            vec2.fromValues(0, (i * diagonal[1]) / channels.length)
-          );
+  const ChannelsLayer = () => (
+    <svg viewBox={[
+      -parentWidth/2,
+      -parentHeight/2,
+      parentWidth,
+      parentHeight,
+    ].join(' ')}>
+      <clipPath id='lineChunk' clipPathUnits='userSpaceOnUse'>
+        <rect x={-parentWidth/2} y={-parentHeight/12} width={parentWidth} height={parentHeight/6} />
+      </clipPath>
 
-          const subBottomRight = vec2.create();
-          vec2.add(
-            subBottomRight,
-            topLeft,
-            vec2.fromValues(
-              diagonal[0],
-              ((i + 1) * diagonal[1]) / channels.length
-            )
-          );
+      {filteredChannels.map((channel, i) => {
+        if (!channelMetadata[channel.index]) {
+          return null;
+        }
+        const subTopLeft = vec2.create();
+        vec2.add(
+          subTopLeft,
+          topLeft,
+          vec2.fromValues(0, (i * diagonal[1]) / channels.length)
+        );
 
-          const subDiagonal = vec2.create();
-          vec2.sub(subDiagonal, subBottomRight, subTopLeft);
+        const subBottomRight = vec2.create();
+        vec2.add(
+          subBottomRight,
+          topLeft,
+          vec2.fromValues(
+            diagonal[0],
+            ((i + 1) * diagonal[1]) / channels.length
+          )
+        );
 
-          const axisEnd = vec2.create();
-          vec2.add(axisEnd, subTopLeft, vec2.fromValues(0.1, subDiagonal[1]));
+        const subDiagonal = vec2.create();
+        vec2.sub(subDiagonal, subBottomRight, subTopLeft);
 
-          const seriesRange = channelMetadata[channel.index].seriesRange;
-          const scales = [
-            scaleLinear()
-              .domain(interval)
-              .range([subTopLeft[0], subBottomRight[0]]),
-            scaleLinear()
-              .domain(seriesRange)
-              .range([subTopLeft[1], subBottomRight[1]]),
-          ];
+        const axisEnd = vec2.create();
+        vec2.add(axisEnd, subTopLeft, vec2.fromValues(0.1, subDiagonal[1]));
 
-          return (
-            <Object2D
-              key={`${channel.index}-${channels.length}`}
-              position={center}
-            >
-              <Object2D layer={1}>
-                {channel.traces.map((trace, j) => {
-                  return (
-                    <Object2D key={`${j}-${channel.traces.length}`}>
-                      {trace.chunks.map((chunk, k) => {
-                        return (
-                          <LineChunk
-                            channelIndex={channel.index}
-                            traceIndex={j}
-                            chunkIndex={k}
-                            key={`${k}-${trace.chunks.length}`}
-                            chunk={chunk}
-                            seriesRange={seriesRange}
-                            amplitudeScale={amplitudeScale}
-                            scales={scales}
-                          />
-                        );
-                      })}
-                    </Object2D>
-                  );
-                })}
-              </Object2D>
-            </Object2D>
-          );
-        })}
-      </Object2D>
-    );
-  };
+        const seriesRange = channelMetadata[channel.index].seriesRange;
+        const scales = [
+          scaleLinear()
+            .domain(interval)
+            .range([subTopLeft[0], subBottomRight[0]]),
+          scaleLinear()
+            .domain(seriesRange)
+            .range([subTopLeft[1], subBottomRight[1]]),
+        ];
+
+        return (
+          channel.traces.map((trace, j) => (
+            trace.chunks.map((chunk, k) => (
+              <LineChunk
+                channelIndex={channel.index}
+                traceIndex={j}
+                chunkIndex={k}
+                key={`${k}-${trace.chunks.length}`}
+                chunk={chunk}
+                seriesRange={seriesRange}
+                amplitudeScale={amplitudeScale}
+                scales={scales}
+              />
+            ))
+          ))
+        );
+      })}
+    </svg>
+  );
 
   const highPassFilters = Object.keys(HIGH_PASS_FILTERS).map((key) =>
     <option value={key} key={key}>{HIGH_PASS_FILTERS[key].label}</option>
@@ -317,6 +313,7 @@ const SeriesRenderer = ({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                padding: '40px 0',
               }}
             >
               {filteredChannels.map((channel) => (
@@ -342,25 +339,21 @@ const SeriesRenderer = ({
                 />
               )}
               <ResponsiveViewer
-                name={'series'}
+                name='series'
                 transparent={true}
                 mouseMove={R.compose(
                   setCursor,
                   R.nth(0)
                 )}
               >
-                <RenderLayer svg>
-                  <XAxisLayer
-                    viewerWidth={0}
-                    viewerHeight={0}
-                    interval={interval}
-                  />
-                  <ChannelAxesLayer viewerHeight={0}/>
-                </RenderLayer>
-                <RenderLayer three>
-                  <EpochsLayer/>
-                  <ChannelsLayer/>
-                </RenderLayer>
+                <XAxisLayer
+                  viewerWidth={0}
+                  viewerHeight={0}
+                  interval={interval}
+                />
+                <ChannelAxesLayer viewerHeight={0}/>
+                <EpochsLayer/>
+                <ChannelsLayer/>
               </ResponsiveViewer>
             </Col>
           </Row>
@@ -375,6 +368,8 @@ const SeriesRenderer = ({
 };
 
 SeriesRenderer.defaultProps = {
+  parentWidth: 400,
+  parentHeight: 300,
   interval: [0.25, 0.75],
   amplitudeScale: 1,
   channels: [],
@@ -385,42 +380,45 @@ SeriesRenderer.defaultProps = {
   limit: 6,
 };
 
-export default connect(
-  (state) => ({
-    interval: state.bounds.interval,
-    amplitudeScale: state.bounds.amplitudeScale,
-    cursor: state.cursor,
-    channels: state.dataset.channels,
-    epochs: state.dataset.epochs,
-    hidden: state.montage.hidden,
-    channelMetadata: state.dataset.channelMetadata,
-    offsetIndex: state.dataset.offsetIndex,
-  }),
+export default R.compose(
+  connect(
+    (state) => ({
+      interval: state.bounds.interval,
+      amplitudeScale: state.bounds.amplitudeScale,
+      cursor: state.cursor,
+      channels: state.dataset.channels,
+      epochs: state.dataset.epochs,
+      hidden: state.montage.hidden,
+      channelMetadata: state.dataset.channelMetadata,
+      offsetIndex: state.dataset.offsetIndex,
+    }),
 
-  (dispatch: (any) => void) => ({
-    setOffsetIndex: R.compose(
-      dispatch,
-      setOffsetIndex
-    ),
-    setCursor: R.compose(
-      dispatch,
-      setCursor
-    ),
-    setAmplitudesScale: R.compose(
-      dispatch,
-      setAmplitudesScale
-    ),
-    resetAmplitudesScale: R.compose(
-      dispatch,
-      resetAmplitudesScale
-    ),
-    setLowPassFilter: R.compose(
-      dispatch,
-      setLowPassFilter
-    ),
-    setHighPassFilter: R.compose(
-      dispatch,
-      setHighPassFilter
-    ),
-  })
+    (dispatch: (any) => void) => ({
+      setOffsetIndex: R.compose(
+        dispatch,
+        setOffsetIndex
+      ),
+      setCursor: R.compose(
+        dispatch,
+        setCursor
+      ),
+      setAmplitudesScale: R.compose(
+        dispatch,
+        setAmplitudesScale
+      ),
+      resetAmplitudesScale: R.compose(
+        dispatch,
+        resetAmplitudesScale
+      ),
+      setLowPassFilter: R.compose(
+        dispatch,
+        setLowPassFilter
+      ),
+      setHighPassFilter: R.compose(
+        dispatch,
+        setHighPassFilter
+      ),
+    }),
+  ),
+  withParentSize
 )(SeriesRenderer);

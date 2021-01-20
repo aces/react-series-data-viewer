@@ -1,8 +1,6 @@
 // @flow
 
 import {vec2} from 'gl-matrix';
-import React from 'react';
-import * as THREE from 'three';
 import Rectangle from './Rectangle';
 import {MIN_EPOCH_WIDTH, DEFAULT_VIEW_BOUNDS} from '../../vector';
 
@@ -11,7 +9,7 @@ type Props = {
   duration: number,
   type: string,
   scales: [any, any],
-  color: typeof THREE.Color,
+  color: string,
   opacity: number
 };
 
@@ -38,7 +36,7 @@ const Epoch = ({onset, duration, type, scales, color, opacity}: Props) => {
 };
 
 Epoch.defaultProps = {
-  color: new THREE.Color('#000'),
+  color: '#000',
   opacity: 1,
 };
 
