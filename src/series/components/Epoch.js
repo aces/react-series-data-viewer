@@ -1,10 +1,10 @@
 // @flow
 
 import {vec2} from 'gl-matrix';
-import Rectangle from './Rectangle';
-import {MIN_EPOCH_WIDTH, DEFAULT_VIEW_BOUNDS} from '../../vector';
+import {MIN_EPOCH_WIDTH} from '../../vector';
 
 type Props = {
+  parentHeight: number,
   onset: number,
   duration: number,
   type: string,
@@ -13,31 +13,34 @@ type Props = {
   opacity: number
 };
 
-const Epoch = ({onset, duration, type, scales, color, opacity}: Props) => {
-  const p0 = vec2.fromValues(
+const Epoch = ({parentHeight, onset, duration, scales, color}: Props) => {
+  const start = vec2.fromValues(
     scales[0](onset),
-    scales[1](DEFAULT_VIEW_BOUNDS.y[0])
+    scales[1](-parentHeight/2),
   );
 
-  const p1 = vec2.fromValues(
+  const end = vec2.fromValues(
     scales[0](onset + duration) + MIN_EPOCH_WIDTH,
-    scales[1](DEFAULT_VIEW_BOUNDS.y[1])
+    scales[1](parentHeight/2)
   );
+
+  const width = Math.abs(end[0] - start[0]);
+  const height = Math.abs(end[1] - start[1]);
+  const center = (start[0] + end[0]) / 2;
 
   return (
-    <Rectangle
-      cacheKey={`${onset}-${duration}-${type}`}
-      start={p0}
-      end={p1}
-      color={color}
-      opacity={opacity}
+    <rect
+      fill={color}
+      width={width}
+      height={height}
+      x={center - width/2}
+      y={-height/2}
     />
   );
 };
 
 Epoch.defaultProps = {
-  color: '#000',
-  opacity: 1,
+  color: '#dae5f2',
 };
 
 export default Epoch;

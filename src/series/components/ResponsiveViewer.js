@@ -8,10 +8,8 @@ import {withParentSize} from '@visx/responsive';
 import type {Vector2} from '../../vector';
 
 type Props = {
-  name: string,
   parentWidth: number,
   parentHeight: number,
-  transparent: boolean,
   mouseDown: Vector2 => void,
   mouseMove: Vector2 => void,
   mouseUp: Vector2 => void,
@@ -19,10 +17,8 @@ type Props = {
 };
 
 const ResponsiveViewer = ({
-  name,
   parentWidth,
   parentHeight,
-  transparent,
   mouseDown,
   mouseMove,
   mouseUp,
@@ -57,10 +53,10 @@ const ResponsiveViewer = ({
     ];
   };
 
-
   return (
     <svg
-      style={{position: 'absolute', overflow: 'hidden'}}
+      viewBox={[-parentWidth/2, -parentHeight/2, parentWidth, parentHeight].join(' ')}
+      style={{overflow: 'hidden'}}
       width={parentWidth}
       height={parentHeight}
       onMouseDown={R.compose(
@@ -86,10 +82,8 @@ const ResponsiveViewer = ({
 };
 
 ResponsiveViewer.defaultProps = {
-  name: '',
   parentWidth: 400,
   parentHeight: 300,
-  transparent: false,
   mouseMove: () => {},
   mouseDown: () => {},
   mouseUp: () => {},

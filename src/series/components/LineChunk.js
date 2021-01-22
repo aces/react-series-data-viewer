@@ -96,7 +96,7 @@ const LineChunk = ({
   return (
     <Group
       style={{clipPath: 'url(#lineChunk)'}}
-      top={p0[1]}
+      top={-p0[1]}
     >
       <Group
         transform={'translate(' + p0[0] + ' 0)' +

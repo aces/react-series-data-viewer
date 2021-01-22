@@ -12,134 +12,160 @@ import {
 } from '../store/logic/dragBounds';
 import ResponsiveViewer from './ResponsiveViewer';
 import Axis from './Axis';
-import {withParentSize} from '@visx/responsive';
-import {hex2rgba} from '../../color';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Button, Row, Col} from 'reactstrap';
+import {setInterval} from '../store/state/bounds';
 
 type Props = {
-  parentWidth: number,
-  parentHeight: number,
+  viewerHeight: number,
+  seriesViewerWidth: number,
   domain: [number, number],
   interval: [number, number],
+  setInterval: [number, number] => void,
   dragStart: number => void,
   dragContinue: number => void,
-  dragEnd: number => void
+  dragEnd: number => void,
 };
 
 const IntervalSelect = ({
-  parentWidth,
-  parentHeight,
+  viewerHeight,
+  seriesViewerWidth,
   domain,
   interval,
+  setInterval,
   dragStart,
   dragContinue,
   dragEnd,
 }: Props) => {
+  const [refNode, setRefNode] = useState(null);
+  const [bounds, setBounds] = useState(null);
+  const getBounds = useCallback((domNode) => {
+    if (domNode) {
+      setRefNode(domNode);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (refNode) {
+      setBounds(refNode.getBoundingClientRect());
+    }
+  }, [seriesViewerWidth]);
+
   const topLeft = vec2.fromValues(
-    -parentWidth/2,
-    parentHeight/2
+    -seriesViewerWidth/2,
+    viewerHeight/2
   );
   const bottomRight = vec2.fromValues(
-    parentWidth/2,
-    -parentHeight/2
+    seriesViewerWidth/2,
+    -viewerHeight/2
   );
 
   const scale = scaleLinear()
     .domain(domain)
-    .range([-parentWidth/2, parentWidth/2]);
+    .range([-seriesViewerWidth/2, seriesViewerWidth/2]);
 
   const ySlice = (x) => ({
     p0: vec2.fromValues(x, topLeft[1]),
     p1: vec2.fromValues(x, bottomRight[1]),
   });
 
-  const leftStart = topLeft[0];
-  const leftEnd = ySlice(scale(interval[0])).p1[0];
-  const leftWidth = Math.abs(leftEnd - leftStart);
-  const leftCenter = (leftStart + leftEnd) / 2;
-
-  const rightStart = ySlice(scale(interval[1])).p0[0];
-  const rightEnd = bottomRight[0];
-  const rightWidth = Math.abs(rightEnd - rightStart);
-  const rightCenter = (rightStart + rightEnd) / 2;
+  const start = ySlice(scale(interval[0])).p1[0];
+  const end = ySlice(scale(interval[1])).p0[0];
+  const width = Math.abs(end - start);
+  const center = (start + end) / 2;
 
   const BackShadowLayer = ({interval}) => (
-    <svg viewBox={[-parentWidth/2, 0, parentWidth, parentHeight].join(' ')}>
+    <>
       <rect
-        fill={hex2rgba({color: '#aaaaaa', alpha: 0.3})}
-        width={leftWidth}
+        fill='#E4EBF2'
+        stroke='#C3D5DB'
+        width={width}
         height={'100%'}
-        x={leftCenter - leftWidth/2}
+        x={center - width/2}
+        y={-viewerHeight/2}
       />
-      <rect
-        fill={hex2rgba({color: '#aaaaaa', alpha: 0.3})}
-        width={rightWidth}
-        height={'100%'}
-        x={rightCenter - rightWidth/2}
-      />
-    </svg>
+    </>
   );
 
   const AxisLayer = ({viewerWidth, viewerHeight, domain}) => (
-    <Group top={viewerHeight - 1}>
+    <Group top={viewerHeight/2} left={-viewerWidth/2}>
       <Axis domain={domain} range={[0, viewerWidth]} orientation='top' />
     </Group>
   );
 
+  const onMouseMove = (v) => {
+    const x = Math.min(100, Math.max(0, (v.pageX - bounds.x)/bounds.width));
+    return (dragContinue)(x);
+  };
+
+  const onMouseUp = (v) => {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    const x = Math.min(100, Math.max(0, (v.pageX - bounds.x)/bounds.width));
+    return (dragEnd)(x);
+  };
+
   return (
-    <ResponsiveViewer
-      transparent={true}
-      mouseDown={(v) => {
-        R.compose(
-          dragStart,
-          R.nth(0)
-        )(v);
-      }}
-      mouseMove={(v) => {
-        R.compose(
-          dragContinue,
-          R.nth(0)
-        )(v);
-      }}
-      mouseUp={(v) => {
-        R.compose(
-          dragEnd,
-          R.nth(0)
-        )(v);
-      }}
-    >
-      <AxisLayer viewerWidth={0} viewerHeight={0} domain={domain} />
-      <BackShadowLayer interval={interval} />
-    </ResponsiveViewer>
+    <Row className='no-gutters'>
+      <Col
+        xs={2}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <div>Timeline range</div>
+        <Button
+          onClick={() => setInterval([domain[0], domain[1]])}
+        >Reset</Button>
+      </Col>
+      <div className='col-xs-10' style={{height: viewerHeight}} ref={getBounds}>
+        <ResponsiveViewer
+          mouseDown={(v) => {
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            R.compose(dragStart, R.nth(0))(v);
+          }}
+        >
+          <BackShadowLayer interval={interval} />
+          <AxisLayer domain={domain} />
+        </ResponsiveViewer>
+      </div>
+    </Row>
   );
 };
 
 IntervalSelect.defaultProps = {
-  parentWidth: 400,
-  parentHeight: 50,
+  viewerHeight: 50,
+  seriesViewerWidth: 400,
   domain: [0, 1],
   interval: [0.25, 0.75],
 };
 
-export default R.compose(
-  connect(
-    (state) => ({
-      domain: state.bounds.domain,
-      interval: state.bounds.interval,
-    }),
-    (dispatch: any => void) => ({
-      dragStart: R.compose(
-        dispatch,
-        startDragInterval
-      ),
-      dragContinue: R.compose(
-        dispatch,
-        continueDragInterval
-      ),
-      dragEnd: R.compose(
-        dispatch,
-        endDragInterval
-      ),
-    })
-  ),
-  withParentSize
+export default connect(
+  (state) => ({
+    domain: state.bounds.domain,
+    interval: state.bounds.interval,
+    seriesViewerWidth: state.bounds.viewerWidth,
+  }),
+  (dispatch: any => void) => ({
+    dragStart: R.compose(
+      dispatch,
+      startDragInterval
+    ),
+    dragContinue: R.compose(
+      dispatch,
+      continueDragInterval
+    ),
+    dragEnd: R.compose(
+      dispatch,
+      endDragInterval
+    ),
+    setInterval: R.compose(
+      dispatch,
+      setInterval
+    ),
+  })
 )(IntervalSelect);

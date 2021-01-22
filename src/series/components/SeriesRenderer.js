@@ -1,12 +1,13 @@
 // @flow
 
+import React, {useEffect} from 'react';
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
-import {Container, Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
+import {Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
 import {Group} from '@visx/group';
 import {connect} from 'react-redux';
 import {scaleLinear} from 'd3-scale';
-import {MAX_RENDERED_EPOCHS} from '../../vector';
+import {MAX_RENDERED_EPOCHS, MAX_CHANNELS} from '../../vector';
 import ResponsiveViewer from './ResponsiveViewer';
 import Axis from './Axis';
 import LineChunk from './LineChunk';
@@ -24,7 +25,7 @@ import {
   HIGH_PASS_FILTERS,
   setHighPassFilter,
 } from '../store/logic/highLowPass';
-import {withParentSize} from '@visx/responsive';
+import {setViewerWidth, setViewerHeight} from '../store/state/bounds';
 
 import type {
   ChannelMetadata,
@@ -33,8 +34,8 @@ import type {
 } from '../store/types';
 
 type Props = {
-  parentWidth: number,
-  parentHeight: number,
+  viewerWidth: number,
+  viewerHeight: number,
   interval: [number, number],
   amplitudeScale: number,
   cursor: ?number,
@@ -49,12 +50,14 @@ type Props = {
   resetAmplitudesScale: void => void,
   setLowPassFilter: string => void,
   setHighPassFilter: string => void,
+  setViewerWidth: number => void,
+  setViewerHeight: number => void,
   limit: number
 };
 
 const SeriesRenderer = ({
-  parentWidth,
-  parentHeight,
+  viewerHeight,
+  viewerWidth,
   interval,
   amplitudeScale,
   cursor,
@@ -69,16 +72,22 @@ const SeriesRenderer = ({
   resetAmplitudesScale,
   setLowPassFilter,
   setHighPassFilter,
+  setViewerWidth,
+  setViewerHeight,
   limit,
 }: Props) => {
+  useEffect(() => {
+    setViewerHeight(viewerHeight);
+  }, [viewerHeight]);
+
   const topLeft = vec2.fromValues(
-    -parentWidth/2,
-    parentHeight/2
+    -viewerWidth/2,
+    viewerHeight/2
   );
 
   const bottomRight = vec2.fromValues(
-    parentWidth/2,
-    -parentHeight/2
+    viewerWidth/2,
+    -viewerHeight/2
   );
 
   const diagonal = vec2.create();
@@ -93,7 +102,7 @@ const SeriesRenderer = ({
       .domain(interval)
       .range([topLeft[0], bottomRight[0]]),
     scaleLinear()
-      .domain([-parentHeight/2, parentHeight/2])
+      .domain([-viewerHeight/2, viewerHeight/2])
       .range([topLeft[1], bottomRight[1]]),
   ];
 
@@ -101,34 +110,36 @@ const SeriesRenderer = ({
 
   const XAxisLayer = ({viewerWidth, viewerHeight, interval}) => {
     return (
-      <Group>
-        <Axis
-          domain={interval}
-          range={[0, viewerWidth]}
-          orientation='bottom'
-        />
-        <Group top={viewerHeight - 1}>
+      <>
+        <Group top={-viewerHeight/2} left={-viewerWidth/2}>
+          <Axis
+            domain={interval}
+            range={[0, viewerWidth]}
+            orientation='bottom'
+          />
+        </Group>
+        <Group top={viewerHeight/2} left={-viewerWidth/2}>
           <Axis domain={interval} range={[0, viewerWidth]} orientation='top' />
         </Group>
-      </Group>
+      </>
     );
   };
 
+  const filteredEpochs = epochs.filter(
+    (epoch) =>
+      epoch.onset + epoch.duration > interval[0] && epoch.onset < interval[1]
+  );
+
   const EpochsLayer = () => {
-    const filteredEpochs = epochs.filter(
-      (epoch) =>
-        epoch.onset + epoch.duration > interval[0] && epoch.onset < interval[1]
-    );
     return (
       <Group>
-        {filteredEpochs.length < MAX_RENDERED_EPOCHS &&
-          filteredEpochs.map((epoch, i) => {
+        {filteredEpochs.slice(0, MAX_RENDERED_EPOCHS).map((epoch, i) => {
             return (
               <Epoch
                 {...epoch}
+                parentHeight={viewerHeight}
                 key={`${i}-${epochs.length}`}
                 scales={scales}
-                opacity={0.3}
               />
             );
           })}
@@ -136,21 +147,22 @@ const SeriesRenderer = ({
     );
   };
 
-  const ChannelAxesLayer = ({viewerHeight}) => {
-    const axisHeight = viewerHeight / filteredChannels.length;
+  const ChannelAxesLayer = ({viewerWidth, viewerHeight}) => {
+    const axisHeight = viewerHeight / MAX_CHANNELS;
     return (
-      <Group>
+      <Group top={-viewerHeight/2} left={-viewerWidth/2}>
+        <line y1="0" y2={viewerHeight} stroke="black" />
         {filteredChannels.map((channel, i) => {
           const seriesRange = channelMetadata[channel.index].seriesRange;
           return (
             <Axis
-              index={i}
               key={`${channel.index}`}
-              padding={10}
+              padding={2}
               domain={seriesRange}
               range={[i * axisHeight, (i + 1) * axisHeight]}
               format={() => ''}
               orientation='right'
+              hideLine='true'
             />
           );
         })}
@@ -158,73 +170,74 @@ const SeriesRenderer = ({
     );
   };
 
-  const ChannelsLayer = () => (
-    <svg viewBox={[
-      -parentWidth/2,
-      -parentHeight/2,
-      parentWidth,
-      parentHeight,
-    ].join(' ')}>
-      <clipPath id='lineChunk' clipPathUnits='userSpaceOnUse'>
-        <rect x={-parentWidth/2} y={-parentHeight/12} width={parentWidth} height={parentHeight/6} />
-      </clipPath>
+  const ChannelsLayer = ({viewerWidth}) => {
+    useEffect(() => {
+      setViewerWidth(viewerWidth);
+    }, [viewerWidth]);
 
-      {filteredChannels.map((channel, i) => {
-        if (!channelMetadata[channel.index]) {
-          return null;
-        }
-        const subTopLeft = vec2.create();
-        vec2.add(
-          subTopLeft,
-          topLeft,
-          vec2.fromValues(0, (i * diagonal[1]) / channels.length)
-        );
+    return (
+      <>
+        <clipPath id='lineChunk' clipPathUnits='userSpaceOnUse'>
+          <rect x={-viewerWidth / 2} y={-viewerHeight / 12} width={viewerWidth} height={viewerHeight / 6}/>
+        </clipPath>
 
-        const subBottomRight = vec2.create();
-        vec2.add(
-          subBottomRight,
-          topLeft,
-          vec2.fromValues(
-            diagonal[0],
-            ((i + 1) * diagonal[1]) / channels.length
-          )
-        );
+        {filteredChannels.map((channel, i) => {
+          if (!channelMetadata[channel.index]) {
+            return null;
+          }
+          const subTopLeft = vec2.create();
+          vec2.add(
+            subTopLeft,
+            topLeft,
+            vec2.fromValues(0, (i * diagonal[1]) / MAX_CHANNELS)
+          );
 
-        const subDiagonal = vec2.create();
-        vec2.sub(subDiagonal, subBottomRight, subTopLeft);
+          const subBottomRight = vec2.create();
+          vec2.add(
+            subBottomRight,
+            topLeft,
+            vec2.fromValues(
+              diagonal[0],
+              ((i + 1) * diagonal[1]) / MAX_CHANNELS
+            )
+          );
 
-        const axisEnd = vec2.create();
-        vec2.add(axisEnd, subTopLeft, vec2.fromValues(0.1, subDiagonal[1]));
+          const subDiagonal = vec2.create();
+          vec2.sub(subDiagonal, subBottomRight, subTopLeft);
 
-        const seriesRange = channelMetadata[channel.index].seriesRange;
-        const scales = [
-          scaleLinear()
-            .domain(interval)
-            .range([subTopLeft[0], subBottomRight[0]]),
-          scaleLinear()
-            .domain(seriesRange)
-            .range([subTopLeft[1], subBottomRight[1]]),
-        ];
+          const axisEnd = vec2.create();
+          vec2.add(axisEnd, subTopLeft, vec2.fromValues(0.1, subDiagonal[1]));
 
-        return (
-          channel.traces.map((trace, j) => (
-            trace.chunks.map((chunk, k) => (
-              <LineChunk
-                channelIndex={channel.index}
-                traceIndex={j}
-                chunkIndex={k}
-                key={`${k}-${trace.chunks.length}`}
-                chunk={chunk}
-                seriesRange={seriesRange}
-                amplitudeScale={amplitudeScale}
-                scales={scales}
-              />
+          const seriesRange = channelMetadata[channel.index].seriesRange;
+          const scales = [
+            scaleLinear()
+              .domain(interval)
+              .range([subTopLeft[0], subBottomRight[0]]),
+            scaleLinear()
+              .domain(seriesRange)
+              .range([subTopLeft[1], subBottomRight[1]]),
+          ];
+
+          return (
+            channel.traces.map((trace, j) => (
+              trace.chunks.map((chunk, k) => (
+                <LineChunk
+                  channelIndex={channel.index}
+                  traceIndex={j}
+                  chunkIndex={k}
+                  key={`${k}-${trace.chunks.length}`}
+                  chunk={chunk}
+                  seriesRange={seriesRange}
+                  amplitudeScale={amplitudeScale}
+                  scales={scales}
+                />
+              ))
             ))
-          ))
-        );
-      })}
-    </svg>
-  );
+          );
+        })}
+      </>
+    );
+  };
 
   const highPassFilters = Object.keys(HIGH_PASS_FILTERS).map((key) =>
     <option value={key} key={key}>{HIGH_PASS_FILTERS[key].label}</option>
@@ -237,129 +250,131 @@ const SeriesRenderer = ({
   const hardLimit = Math.min(offsetIndex + limit - 1, channelMetadata.length);
 
   return channels.length > 0 ? (
-    <Container fluid style={{height: '100%'}}>
-      <Row style={{height: '100%'}}>
-        <Col xs={12}>
-          <Row>
-            <Col xs={2}/>
-            <Col xs={10}>
-              <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
-                <Col xs={2}>
-                  <ButtonGroup>
-                    <Button
-                      onClick={() => setAmplitudesScale(1.1)}
-                    >-</Button>
-                    <Button
-                      onClick={() => resetAmplitudesScale()}
-                    >Reset</Button>
-                    <Button
-                      onClick={() => setAmplitudesScale(0.9)}
-                    >+</Button>
-                  </ButtonGroup>
-                </Col>
-                <Col xs={2}>
-                  <Input
-                    type="select"
-                    name="highPassFilters"
-                    onChange={(e) => setHighPassFilter(e.target.value)}
-                  >
-                    {highPassFilters}
-                  </Input>
-                </Col>
-                <Col xs={2}>
-                  <Input
-                    type="select"
-                    name="lowPassFilters"
-                    onChange={(e) => setLowPassFilter(e.target.value)}
-                  >
-                    {lowPassFilters}
-                  </Input>
-                </Col>
-                <Col xs={2}>
-                  <ButtonGroup>
-                    <Button onClick={() => setOffsetIndex(offsetIndex - limit)}>
-                      &lt;&lt;
-                    </Button>
-                    <Button onClick={() => setOffsetIndex(offsetIndex - 1)}>
-                      &lt;
-                    </Button>
-                    <Button onClick={() => setOffsetIndex(offsetIndex + 1)}>
-                      &gt;
-                    </Button>
-                    <Button onClick={() => setOffsetIndex(offsetIndex + limit)}>
-                      &gt;&gt;
-                    </Button>
-                  </ButtonGroup>
-                </Col>
-                <Col xs={4}>
-                  Showing{' '}
-                  <div style={{display: 'inline-block', width: '80px'}}>
-                    <Input
-                      type='number'
-                      value={offsetIndex}
-                      onChange={(e) => setOffsetIndex(e.target.value)}
-                    />
-                  </div>
-                  {' '}
-                  to {hardLimit} of {channelMetadata.length}
-                </Col>
-              </Row>
+    <>
+      <Row className='no-gutters'>
+        <Col xs={2}/>
+        <Col xs={10}>
+          <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
+            <Col xs={2}>
+              <ButtonGroup>
+                <Button
+                  onClick={() => setAmplitudesScale(1.1)}
+                >-</Button>
+                <Button
+                  onClick={() => resetAmplitudesScale()}
+                >Reset</Button>
+                <Button
+                  onClick={() => setAmplitudesScale(0.9)}
+                >+</Button>
+              </ButtonGroup>
             </Col>
-          </Row>
-          <Row style={{height: '100%'}} noGutters>
-            <Col
-              xs={2}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                padding: '40px 0',
-              }}
-            >
-              {filteredChannels.map((channel) => (
-                <div
-                  key={channel.index}
-                  style={{display: 'flex', margin: 'auto'}}
-                >
-                  {channelMetadata[channel.index] &&
-                  channelMetadata[channel.index].name}
-                </div>
-              ))}
-            </Col>
-            <Col
-              xs={10}
-              style={{position: 'relative'}}
-              onMouseLeave={() => setCursor(null)}
-            >
-              {cursor && (
-                <SeriesCursor
-                  cursor={cursor}
-                  channels={channels}
-                  interval={interval}
-                />
-              )}
-              <ResponsiveViewer
-                name='series'
-                transparent={true}
-                mouseMove={R.compose(
-                  setCursor,
-                  R.nth(0)
-                )}
+            <Col xs={2}>
+              <Input
+                type="select"
+                name="highPassFilters"
+                onChange={(e) => setHighPassFilter(e.target.value)}
               >
-                <XAxisLayer
-                  viewerWidth={0}
-                  viewerHeight={0}
-                  interval={interval}
+                {highPassFilters}
+              </Input>
+            </Col>
+            <Col xs={2}>
+              <Input
+                type="select"
+                name="lowPassFilters"
+                onChange={(e) => setLowPassFilter(e.target.value)}
+              >
+                {lowPassFilters}
+              </Input>
+            </Col>
+            <Col xs={2}>
+              <ButtonGroup>
+                <Button onClick={() => setOffsetIndex(offsetIndex - limit)}>
+                  &lt;&lt;
+                </Button>
+                <Button onClick={() => setOffsetIndex(offsetIndex - 1)}>
+                  &lt;
+                </Button>
+                <Button onClick={() => setOffsetIndex(offsetIndex + 1)}>
+                  &gt;
+                </Button>
+                <Button onClick={() => setOffsetIndex(offsetIndex + limit)}>
+                  &gt;&gt;
+                </Button>
+              </ButtonGroup>
+            </Col>
+            <Col xs={4}>
+              Showing{' '}
+              <div style={{display: 'inline-block', width: '80px'}}>
+                <Input
+                  type='number'
+                  value={offsetIndex}
+                  onChange={(e) => setOffsetIndex(e.target.value)}
                 />
-                <ChannelAxesLayer viewerHeight={0}/>
-                <EpochsLayer/>
-                <ChannelsLayer/>
-              </ResponsiveViewer>
+              </div>
+              {' '}
+              to {hardLimit} of {channelMetadata.length}
             </Col>
           </Row>
         </Col>
       </Row>
-    </Container>
+      <Row noGutters>
+        <Col
+          xs={2}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          {filteredChannels.map((channel) => (
+            <div
+              key={channel.index}
+              style={{
+                display: 'flex',
+                height: 1 / MAX_CHANNELS * 100 + '%',
+                alignItems: 'center',
+              }}
+            >
+              {channelMetadata[channel.index] &&
+              channelMetadata[channel.index].name}
+            </div>
+          ))}
+        </Col>
+        <Col
+          xs={10}
+          style={{position: 'relative'}}
+          onMouseLeave={() => setCursor(null)}
+        >
+          {cursor && (
+            <SeriesCursor
+              cursor={cursor}
+              channels={channels}
+              epochs={filteredEpochs}
+              interval={interval}
+            />
+          )}
+          <div style={{height: viewerHeight}}>
+            <ResponsiveViewer
+              name='series'
+              transparent={true}
+              mouseMove={R.compose(
+                setCursor,
+                R.nth(0)
+              )}
+            >
+              <EpochsLayer/>
+              <ChannelsLayer/>
+              <XAxisLayer
+                viewerWidth={0}
+                viewerHeight={0}
+                interval={interval}
+              />
+              <ChannelAxesLayer viewerHeight={0}/>
+            </ResponsiveViewer>
+          </div>
+        </Col>
+      </Row>
+    </>
   ) : (
     <div style={{width: '100%', height: '100%'}}>
       <h4>Loading...</h4>
@@ -368,10 +383,10 @@ const SeriesRenderer = ({
 };
 
 SeriesRenderer.defaultProps = {
-  parentWidth: 400,
-  parentHeight: 300,
   interval: [0.25, 0.75],
   amplitudeScale: 1,
+  viewerHeight: 400,
+  viewerSize: [400, 400],
   channels: [],
   epochs: [],
   hidden: [],
@@ -380,45 +395,51 @@ SeriesRenderer.defaultProps = {
   limit: 6,
 };
 
-export default R.compose(
-  connect(
-    (state) => ({
-      interval: state.bounds.interval,
-      amplitudeScale: state.bounds.amplitudeScale,
-      cursor: state.cursor,
-      channels: state.dataset.channels,
-      epochs: state.dataset.epochs,
-      hidden: state.montage.hidden,
-      channelMetadata: state.dataset.channelMetadata,
-      offsetIndex: state.dataset.offsetIndex,
-    }),
-
-    (dispatch: (any) => void) => ({
-      setOffsetIndex: R.compose(
-        dispatch,
-        setOffsetIndex
-      ),
-      setCursor: R.compose(
-        dispatch,
-        setCursor
-      ),
-      setAmplitudesScale: R.compose(
-        dispatch,
-        setAmplitudesScale
-      ),
-      resetAmplitudesScale: R.compose(
-        dispatch,
-        resetAmplitudesScale
-      ),
-      setLowPassFilter: R.compose(
-        dispatch,
-        setLowPassFilter
-      ),
-      setHighPassFilter: R.compose(
-        dispatch,
-        setHighPassFilter
-      ),
-    }),
-  ),
-  withParentSize
+export default connect(
+  (state)=> ({
+    viewerWidth: state.bounds.viewerWidth,
+    viewerHeight: state.bounds.viewerHeight,
+    interval: state.bounds.interval,
+    amplitudeScale: state.bounds.amplitudeScale,
+    cursor: state.cursor,
+    channels: state.dataset.channels,
+    epochs: state.dataset.epochs,
+    hidden: state.montage.hidden,
+    channelMetadata: state.dataset.channelMetadata,
+    offsetIndex: state.dataset.offsetIndex,
+  }),
+  (dispatch: (any) => void) => ({
+    setOffsetIndex: R.compose(
+      dispatch,
+      setOffsetIndex
+    ),
+    setCursor: R.compose(
+      dispatch,
+      setCursor
+    ),
+    setAmplitudesScale: R.compose(
+      dispatch,
+      setAmplitudesScale
+    ),
+    resetAmplitudesScale: R.compose(
+      dispatch,
+      resetAmplitudesScale
+    ),
+    setLowPassFilter: R.compose(
+      dispatch,
+      setLowPassFilter
+    ),
+    setHighPassFilter: R.compose(
+      dispatch,
+      setHighPassFilter
+    ),
+    setViewerWidth: R.compose(
+      dispatch,
+      setViewerWidth
+    ),
+    setViewerHeight: R.compose(
+      dispatch,
+      setViewerHeight
+    ),
+  })
 )(SeriesRenderer);

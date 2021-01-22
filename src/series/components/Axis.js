@@ -9,7 +9,8 @@ type Props = {
   range: [number, number],
   ticks: number,
   padding: number,
-  format: number => string
+  format: number => string,
+  hideLine: bool,
 };
 
 const Axis = ({
@@ -19,6 +20,7 @@ const Axis = ({
   ticks,
   padding,
   format,
+  hideLine,
 }: Props) => {
   const scale = scaleLinear()
     .domain(domain)
@@ -33,6 +35,7 @@ const Axis = ({
       orientation={orientation}
       tickValues={tickValues}
       tickFormat={format}
+      hideAxisLine={hideLine}
     />
   );
 };
@@ -42,6 +45,7 @@ Axis.defaultProps = {
   domain: [0, 1],
   ticks: 10,
   padding: 0,
+  hideAxisLine: false,
   format: (tick) => `${tick}`,
 };
 

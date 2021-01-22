@@ -4,7 +4,7 @@ import * as R from 'ramda';
 import type {Node} from 'react';
 import {bisector} from 'd3-array';
 import {colorOrder} from '../../color';
-import type {Channel} from '../store/types';
+import type {Channel, Epoch} from '../store/types';
 
 type CursorContentProps = {
   time: number,
@@ -16,13 +16,14 @@ type CursorContentProps = {
 type Props = {
   cursor: number,
   channels: Channel[],
+  epochs: Epoch[],
   CursorContent: CursorContentProps => Node,
   interval: [number, number],
   showMarker: boolean
 };
 
 const SeriesCursor = (
-  {cursor, channels, CursorContent, interval, showMarker}: Props
+  {cursor, channels, epochs, CursorContent, interval, showMarker}: Props
 ) => {
   const left = Math.min(Math.max(100 * cursor, 0), 100) + '%';
   const time = interval[0] + cursor * (interval[1] - interval[0]);
@@ -67,6 +68,7 @@ const SeriesCursor = (
       ))}
     </div>
   );
+
   const TimeMarker = () => (
     <div
       style={{
@@ -83,6 +85,28 @@ const SeriesCursor = (
       {time}
     </div>
   );
+
+  const EpochMarker = () => {
+    const index = epochs.findIndex((epoch) => epoch.onset > time) - 1;
+
+    return index > -1 ? (
+      <div
+        style={{
+          left,
+          top: 'calc(100% + 26px)',
+          position: 'absolute',
+          display: 'flex',
+          flexDirection: 'row',
+          backgroundColor: '#E4EBF2',
+          padding: '2px 2px',
+          borderRadius: '3px',
+        }}
+      >
+        {epochs[index].type}
+      </div>
+    ) : (null);
+  };
+
   return (
     <div
       style={{
@@ -96,6 +120,7 @@ const SeriesCursor = (
       <Cursor />
       <ValueTags />
       <TimeMarker />
+      <EpochMarker />
     </div>
   );
 };
@@ -143,7 +168,7 @@ const CursorContent = ({time, channel, contentIndex, showMarker}) => {
             style={{
               display: 'flex',
               flexDirection: 'row',
-              backgroundColor: '#eee',
+              backgroundColor: 'rgba(238, 238, 238, 0.8)',
               padding: '2px 2px',
               borderRadius: '3px',
             }}
@@ -159,6 +184,7 @@ const CursorContent = ({time, channel, contentIndex, showMarker}) => {
 
 SeriesCursor.defaultProps = {
   channels: [],
+  epochs: [],
   CursorContent,
   showMarker: false,
 };

@@ -80,10 +80,10 @@ class EEGLabSeriesProvider extends Component {
          || text.json instanceof String)) return;
       this.store.dispatch(
         setEpochs(
-          tsvParse(text.json).map(({onset, duration, trialType}) => ({
+          tsvParse(text.json.replace('trial_type', 'type')).map(({onset, duration, type}) => ({
             onset: parseFloat(onset),
             duration: parseFloat(duration),
-            type: trialType,
+            type: type,
             channels: 'all',
           }))
         )
