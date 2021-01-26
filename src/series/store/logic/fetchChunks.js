@@ -45,19 +45,17 @@ export const loadChunks = ({channelIndex, ...rest}: FetchedChunks) => {
 };
 
 export const fetchChunkAt = R.memoizeWith(
-  R.identity,
+  (baseURL, downsampling, channelIndex, traceIndex, chunkIndex) =>
+    `${channelIndex}-${traceIndex}-${chunkIndex}-${downsampling}`,
   (
     baseURL: string,
     downsampling: number,
     channelIndex: number,
     traceIndex: number,
     chunkIndex: number
-  ) => {
-    return fetchChunk(
-      `${baseURL}/raw/${downsampling}`
-      + `/${channelIndex}/${traceIndex}/${chunkIndex}.buf`
-    );
-  }
+  ) => fetchChunk(
+    `${baseURL}/raw/${downsampling}/${channelIndex}/${traceIndex}/${chunkIndex}.buf`
+  )
 );
 
 type State = {bounds: BoundsState, dataset: DatasetState};
