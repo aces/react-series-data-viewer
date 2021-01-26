@@ -94,7 +94,7 @@ const IntervalSelect = ({
   );
 
   const onMouseMove = (v) => {
-    const x = Math.min(100, Math.max(0, (v.pageX - bounds.x)/bounds.width));
+    const x = Math.min(1, Math.max(0, (v.pageX - bounds.x)/bounds.width));
     return (dragContinue)(x);
   };
 
