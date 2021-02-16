@@ -5,26 +5,43 @@ import type {Node} from 'react';
 import {bisector} from 'd3-array';
 import {colorOrder} from '../../color';
 import type {Channel, Epoch} from '../store/types';
+import {connect} from 'react-redux';
+import {MAX_RENDERED_EPOCHS} from '../../vector';
+import {useEffect} from 'react';
 
 type CursorContentProps = {
   time: number,
   channel: Channel,
   contentIndex: number,
-  showMarker: boolean
+  showMarker: boolean,
 };
 
 type Props = {
   cursor: number,
   channels: Channel[],
   epochs: Epoch[],
+  filteredEpochs: number[],
   CursorContent: CursorContentProps => Node,
   interval: [number, number],
   showMarker: boolean
 };
 
 const SeriesCursor = (
-  {cursor, channels, epochs, CursorContent, interval, showMarker}: Props
+  {
+    cursor,
+    channels,
+    epochs,
+    filteredEpochs,
+    CursorContent,
+    interval,
+    showMarker,
+  }: Props
 ) => {
+  let reversedEpochs = [...filteredEpochs].reverse();
+  useEffect(() => {
+    reversedEpochs = [...filteredEpochs].reverse();
+  }, [filteredEpochs]);
+
   const left = Math.min(Math.max(100 * cursor, 0), 100) + '%';
   const time = interval[0] + cursor * (interval[1] - interval[0]);
 
@@ -87,9 +104,13 @@ const SeriesCursor = (
   );
 
   const EpochMarker = () => {
-    const index = epochs.findIndex((epoch) => epoch.onset > time) - 1;
+    if (reversedEpochs.length > MAX_RENDERED_EPOCHS) return null;
 
-    return index > -1 ? (
+    const index = reversedEpochs.find((index) =>
+      epochs[index].onset < time
+    );
+
+    return index !== undefined ? (
       <div
         style={{
           left,
@@ -104,7 +125,7 @@ const SeriesCursor = (
       >
         {epochs[index].type}
       </div>
-    ) : (null);
+    ) : null;
   };
 
   return (
@@ -157,7 +178,7 @@ const CursorContent = ({time, channel, contentIndex, showMarker}) => {
           const indices = createIndices(chunk.values);
           const bisectTime = bisector(indexToTime(chunk)).left;
           const idx = bisectTime(indices, time);
-          const value = chunk.values[idx];
+          const value = chunk.values[idx-1];
 
           return value;
         };
@@ -174,7 +195,7 @@ const CursorContent = ({time, channel, contentIndex, showMarker}) => {
             }}
           >
             {showMarker && (<Marker color={colorOrder(contentIndex)} />)}
-            {chunk && computeValue(chunk)}{' '}
+            {chunk && computeValue(chunk)}
           </div>
         );
       })}
@@ -185,8 +206,14 @@ const CursorContent = ({time, channel, contentIndex, showMarker}) => {
 SeriesCursor.defaultProps = {
   channels: [],
   epochs: [],
+  filteredEpochs: [],
   CursorContent,
   showMarker: false,
 };
 
-export default SeriesCursor;
+export default connect(
+  (state)=> ({
+    epochs: state.dataset.epochs,
+    filteredEpochs: state.dataset.filteredEpochs,
+  })
+)(SeriesCursor);

@@ -54,7 +54,8 @@ export const fetchChunkAt = R.memoizeWith(
     traceIndex: number,
     chunkIndex: number
   ) => fetchChunk(
-    `${baseURL}/raw/${downsampling}/${channelIndex}/${traceIndex}/${chunkIndex}.buf`
+    `${baseURL}/raw/${downsampling}/${channelIndex}/`
+     + `${traceIndex}/${chunkIndex}.buf`
   )
 );
 
@@ -108,7 +109,8 @@ export const createFetchChunksEpic = (fromState: any => State) => (
                     // Why interval[1] - interval[0] < MAX_VIEWED_CHUNKS ?
                     // downsampling === 0 prevents a change of downsampling
                     // otherwise the interval becomes wrong
-                    interval[1] - interval[0] < MAX_VIEWED_CHUNKS && downsampling === 0
+                    interval[1] - interval[0] < MAX_VIEWED_CHUNKS
+                    && downsampling === 0
                 );
 
               const max = R.reduce(

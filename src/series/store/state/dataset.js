@@ -9,19 +9,27 @@ import {channelReducer} from './channel';
 export const SET_CHANNELS = 'SET_CHANNELS';
 export const setChannels = createAction(SET_CHANNELS);
 
+export const SET_ACTIVE_CHANNEL = 'SET_ACTIVE_CHANNEL';
+export const setActiveChannel = createAction(SET_ACTIVE_CHANNEL);
+
 export const SET_EPOCHS = 'SET_EPOCHS';
 export const setEpochs = createAction(SET_EPOCHS);
 
-export const SET_ACTIVE_CHANNEL = 'SET_ACTIVE_CHANNEL';
-export const setActiveChannel = createAction(SET_ACTIVE_CHANNEL);
+export const SET_FILTERED_EPOCHS = 'SET_FILTERED_EPOCHS';
+export const setFilteredEpochs = createAction(SET_FILTERED_EPOCHS);
+
+export const SET_ACTIVE_EPOCH = 'SET_ACTIVE_EPOCH';
+export const setActiveEpoch = createAction(SET_ACTIVE_EPOCH);
 
 export const SET_DATASET_METADATA = 'SET_DATASET_METADATA';
 export const setDatasetMetadata = createAction(SET_DATASET_METADATA);
 
 export type Action =
   | {type: 'SET_CHANNELS', payload: Channel[]}
-  | {type: 'SET_EPOCHS', payload: Epoch[]}
   | {type: 'SET_ACTIVE_CHANNEL', payload: number}
+  | {type: 'SET_EPOCHS', payload: Epoch[]}
+  | {type: 'SET_FILTERED_EPOCHS', payload: number[]}
+  | {type: 'SET_ACTIVE_EPOCH', payload: number}
   | {
       type: 'SET_DATASET_METADATA',
       payload: {
@@ -37,12 +45,14 @@ export type Action =
 
 export type State = {
   chunkDirectoryURL: string,
-  activeChannel: number | null,
   channelMetadata: ChannelMetadata[],
   channels: Channel[],
+  activeChannel: number | null,
   offsetIndex: number,
   limit: number,
   epochs: Epoch[],
+  filteredEpochs: number[],
+  activeEpoch: number | null,
   shapes: number[][],
   timeInterval: [number, number]
 };
@@ -50,10 +60,13 @@ export type State = {
 export const datasetReducer = (
   state: State = {
     chunkDirectoryURL: '',
-    activeChannel: null,
     channelMetadata: [],
     channels: [],
+    filteredChannels: [],
+    activeChannel: null,
     epochs: [],
+    filteredEpochs: [],
+    activeEpoch: null,
     offsetIndex: 1,
     limit: 6,
     shapes: [],
@@ -69,11 +82,17 @@ export const datasetReducer = (
     case SET_CHANNELS: {
       return R.assoc('channels', action.payload, state);
     }
+    case SET_ACTIVE_CHANNEL: {
+      return R.assoc('activeChannel', action.payload, state);
+    }
     case SET_EPOCHS: {
       return R.assoc('epochs', action.payload, state);
     }
-    case SET_ACTIVE_CHANNEL: {
-      return R.assoc('activeChannel', action.payload, state);
+    case SET_FILTERED_EPOCHS: {
+      return R.assoc('filteredEpochs', action.payload, state);
+    }
+    case SET_ACTIVE_EPOCH: {
+      return R.assoc('activeEpoch', action.payload, state);
     }
     case SET_DATASET_METADATA: {
       return R.merge(state, action.payload);

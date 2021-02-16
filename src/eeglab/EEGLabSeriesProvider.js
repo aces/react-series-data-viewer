@@ -13,6 +13,8 @@ import {
   emptyChannels,
 } from '../series/store/state/dataset';
 import {setDomain, setInterval} from '../series/store/state/bounds';
+import {updateFilteredEpochs} from '../series/store/logic/filterEpochs';
+import {setElectrodes} from '../series/store/state/montage';
 
 /**
  * EEGLabSeriesProvider component
@@ -35,12 +37,25 @@ class EEGLabSeriesProvider extends Component {
 
     window.EEGLabSeriesProviderStore = this.store;
 
-    const {chunkDirectoryURLs, epochsTableURLs, limit} = props;
+    const {
+      chunkDirectoryURLs,
+      epochsTableURLs,
+      electrodesTableUrls,
+      limit,
+    } = props;
 
     const chunkUrls =
       chunkDirectoryURLs instanceof Array
         ? chunkDirectoryURLs
         : [chunkDirectoryURLs];
+
+    const epochUrls =
+      epochsTableURLs instanceof Array ? epochsTableURLs : [epochsTableURLs];
+
+    const electrodesUrls =
+      electrodesTableUrls instanceof Array
+        ? electrodesTableUrls
+        : [electrodesTableUrls];
 
     const racers = (fetcher, urls, route = '') =>
       urls.map((url) =>
@@ -70,21 +85,33 @@ class EEGLabSeriesProvider extends Component {
         this.store.dispatch(setDomain(timeInterval));
         this.store.dispatch(setInterval(timeInterval));
       }
+    ).then(() => Promise.race(racers(fetchText, epochUrls)).then((text) => {
+        if (!(typeof text.json === 'string'
+          || text.json instanceof String)) return;
+        this.store.dispatch(
+          setEpochs(tsvParse(
+            text.json.replace('trial_type', 'type'))
+              .map(({onset, duration, type}) => ({
+                onset: parseFloat(onset),
+                duration: parseFloat(duration),
+                type: type,
+                channels: 'all',
+              }))
+          )
+        );
+        this.store.dispatch(updateFilteredEpochs());
+      })
     );
 
-    const epochUrls =
-      epochsTableURLs instanceof Array ? epochsTableURLs : [epochsTableURLs];
-
-    Promise.race(racers(fetchText, epochUrls)).then((text) => {
+    Promise.race(racers(fetchText, electrodesUrls)).then((text) => {
       if (!(typeof text.json === 'string'
-         || text.json instanceof String)) return;
+        || text.json instanceof String)) return;
       this.store.dispatch(
-        setEpochs(
-          tsvParse(text.json.replace('trial_type', 'type')).map(({onset, duration, type}) => ({
-            onset: parseFloat(onset),
-            duration: parseFloat(duration),
-            type: type,
-            channels: 'all',
+        setElectrodes(
+          tsvParse(text.json).map(({name, x, y, z}) => ({
+            name: name,
+            channelIndex: null,
+            position: [parseFloat(x), parseFloat(y), parseFloat(z)],
           }))
         )
       );

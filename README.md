@@ -1,7 +1,7 @@
 # React series data viewer
 
 Previous versions were implemented with a combination of svg (D3) and WebGL renderer (Three.js). 
-Since #, the Series data viewer strictly uses svg (Visx|D3), to use features like clipPath (significantly simpler to use than Three.js masks) and css styling.
+Since #5c00801, the Series data viewer strictly uses svg (Visx|D3), to use features like clipPath (significantly simpler to use than Three.js masks) and css styling.
 
 ## Main dependencies
 

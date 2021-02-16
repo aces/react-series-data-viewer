@@ -41,11 +41,11 @@ const Axis = ({
 };
 
 Axis.defaultProps = {
-  direction: 'bottom',
+  orientation: 'bottom',
   domain: [0, 1],
   ticks: 10,
   padding: 0,
-  hideAxisLine: false,
+  hideLine: false,
   format: (tick) => `${tick}`,
 };
 

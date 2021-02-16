@@ -29,10 +29,11 @@ export type Epoch = {
   onset: number,
   duration: number,
   type: string,
-  channels: number[] | "all"
+  channels: number[] | "all",
 };
 
 export type Electrode = {
-  channelIndex: number,
-  position: [number, number, number]
+  name: string,
+  channelIndex: ?number,
+  position: [number, number, number],
 };

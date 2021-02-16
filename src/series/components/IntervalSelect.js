@@ -13,8 +13,8 @@ import {
 import ResponsiveViewer from './ResponsiveViewer';
 import Axis from './Axis';
 import React, {useCallback, useEffect, useState} from 'react';
-import {Button, Row, Col} from 'reactstrap';
 import {setInterval} from '../store/state/bounds';
+import {updateFilteredEpochs} from '../store/logic/filterEpochs';
 
 type Props = {
   viewerHeight: number,
@@ -25,6 +25,7 @@ type Props = {
   dragStart: number => void,
   dragContinue: number => void,
   dragEnd: number => void,
+  updateFilteredEpochs: void => void,
 };
 
 const IntervalSelect = ({
@@ -36,20 +37,22 @@ const IntervalSelect = ({
   dragStart,
   dragContinue,
   dragEnd,
+  updateFilteredEpochs,
 }: Props) => {
-  const [refNode, setRefNode] = useState(null);
-  const [bounds, setBounds] = useState(null);
-  const getBounds = useCallback((domNode) => {
-    if (domNode) {
-      setRefNode(domNode);
-    }
-  }, []);
+  const [refNode, setRefNode] = useState<?HTMLDivElement>(null);
+  const [bounds, setBounds] = useState<?ClientRect>(null);
 
   useEffect(() => {
     if (refNode) {
       setBounds(refNode.getBoundingClientRect());
     }
   }, [seriesViewerWidth]);
+
+  const getNode = useCallback((domNode) => {
+    if (domNode) {
+      setRefNode(domNode);
+    }
+  }, []);
 
   const topLeft = vec2.fromValues(
     -seriesViewerWidth/2,
@@ -75,16 +78,14 @@ const IntervalSelect = ({
   const center = (start + end) / 2;
 
   const BackShadowLayer = ({interval}) => (
-    <>
-      <rect
-        fill='#E4EBF2'
-        stroke='#C3D5DB'
-        width={width}
-        height={'100%'}
-        x={center - width/2}
-        y={-viewerHeight/2}
-      />
-    </>
+    <rect
+      fill='#ECF1F6'
+      stroke='#E4EBF2'
+      width={width}
+      height={'100%'}
+      x={center - width/2}
+      y={-viewerHeight/2}
+    />
   );
 
   const AxisLayer = ({viewerWidth, viewerHeight, domain}) => (
@@ -93,22 +94,26 @@ const IntervalSelect = ({
     </Group>
   );
 
-  const onMouseMove = (v) => {
-    const x = Math.min(1, Math.max(0, (v.pageX - bounds.x)/bounds.width));
-    return (dragContinue)(x);
+  const onMouseMove = (v : MouseEvent) => {
+    if (bounds === null || bounds === undefined) return;
+    const x = Math.min(1, Math.max(0, (v.pageX - bounds.left)/bounds.width));
+    dragContinue(x);
   };
 
-  const onMouseUp = (v) => {
+  const onMouseUp = (v : MouseEvent) => {
+    if (bounds === null || bounds === undefined) return;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
-    const x = Math.min(100, Math.max(0, (v.pageX - bounds.x)/bounds.width));
-    return (dragEnd)(x);
+    const x = Math.min(100, Math.max(0, (v.pageX - bounds.left)/bounds.width));
+
+    dragEnd(x);
+    updateFilteredEpochs();
   };
 
   return (
-    <Row className='no-gutters'>
-      <Col
-        xs={2}
+    <div className='row'>
+      <div
+        className='col-xs-2'
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -116,12 +121,23 @@ const IntervalSelect = ({
           alignItems: 'center',
         }}
       >
-        <div>Timeline range</div>
-        <Button
-          onClick={() => setInterval([domain[0], domain[1]])}
-        >Reset</Button>
-      </Col>
-      <div className='col-xs-10' style={{height: viewerHeight}} ref={getBounds}>
+        <strong
+          style={{
+            fontWeight: 'bold',
+            marginBottom: '5px',
+          }}
+        >Timeline range view</strong>
+        <input
+          type='button'
+          className='btn btn-primary btn-xs'
+          onClick={() => {
+            setInterval([domain[0], domain[1]]);
+            updateFilteredEpochs();
+          }}
+          value='Reset'
+        />
+      </div>
+      <div className='col-xs-10' style={{height: viewerHeight}} ref={getNode}>
         <ResponsiveViewer
           mouseDown={(v) => {
             document.addEventListener('mousemove', onMouseMove);
@@ -130,10 +146,14 @@ const IntervalSelect = ({
           }}
         >
           <BackShadowLayer interval={interval} />
-          <AxisLayer domain={domain} />
+          <AxisLayer
+            viewerWidth={0}
+            viewerHeight={0}
+            domain={domain}
+          />
         </ResponsiveViewer>
       </div>
-    </Row>
+    </div>
   );
 };
 
@@ -162,6 +182,10 @@ export default connect(
     dragEnd: R.compose(
       dispatch,
       endDragInterval
+    ),
+    updateFilteredEpochs: R.compose(
+      dispatch,
+      updateFilteredEpochs
     ),
     setInterval: R.compose(
       dispatch,

@@ -13,6 +13,7 @@ type Props = {
   mouseDown: Vector2 => void,
   mouseMove: Vector2 => void,
   mouseUp: Vector2 => void,
+  mouseLeave: Vector2 => void,
   children: Node
 };
 
@@ -22,10 +23,14 @@ const ResponsiveViewer = ({
   mouseDown,
   mouseMove,
   mouseUp,
+  mouseLeave,
   children,
 }: Props) => {
   const provision = (layer) =>
-    React.cloneElement(layer, {viewerWidth: parentWidth, viewerHeight: parentHeight});
+    React.cloneElement(
+      layer,
+      {viewerWidth: parentWidth, viewerHeight: parentHeight}
+    );
 
   const layers = React.Children.toArray(children).map(provision);
 
@@ -48,14 +53,27 @@ const ResponsiveViewer = ({
       height,
     } = e.currentTarget.getBoundingClientRect();
     return [
-      eventScale[0].invert(eventScale[0]((e.clientX - left) / width)),
+      Math.min(
+        1,
+        Math.max(
+          0,
+          eventScale[0].invert(
+            eventScale[0]((e.clientX - left) / width)
+          )
+        )
+      ),
       eventScale[1].invert(eventScale[1]((e.clientY - top) / height)),
     ];
   };
 
   return (
     <svg
-      viewBox={[-parentWidth/2, -parentHeight/2, parentWidth, parentHeight].join(' ')}
+      viewBox={[
+        -parentWidth/2,
+        -parentHeight/2,
+        parentWidth,
+        parentHeight,
+      ].join(' ')}
       style={{overflow: 'hidden'}}
       width={parentWidth}
       height={parentHeight}
@@ -72,7 +90,7 @@ const ResponsiveViewer = ({
         eventToPosition
       )}
       onMouseLeave={R.compose(
-        mouseUp,
+        mouseLeave,
         eventToPosition
       )}
     >
@@ -87,6 +105,7 @@ ResponsiveViewer.defaultProps = {
   mouseMove: () => {},
   mouseDown: () => {},
   mouseUp: () => {},
+  mouseLeave: () => {},
 };
 
 export default withParentSize(ResponsiveViewer);

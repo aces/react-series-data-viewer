@@ -7,13 +7,20 @@ type Props = {
   parentHeight: number,
   onset: number,
   duration: number,
-  type: string,
   scales: [any, any],
   color: string,
-  opacity: number
+  opacity: number,
 };
 
-const Epoch = ({parentHeight, onset, duration, scales, color}: Props) => {
+const Epoch = (
+  {
+    parentHeight,
+    onset,
+    duration,
+    scales,
+    color,
+    opacity,
+  }: Props) => {
   const start = vec2.fromValues(
     scales[0](onset),
     scales[1](-parentHeight/2),
@@ -31,6 +38,7 @@ const Epoch = ({parentHeight, onset, duration, scales, color}: Props) => {
   return (
     <rect
       fill={color}
+      fillOpacity={opacity}
       width={width}
       height={height}
       x={center - width/2}
@@ -41,6 +49,7 @@ const Epoch = ({parentHeight, onset, duration, scales, color}: Props) => {
 
 Epoch.defaultProps = {
   color: '#dae5f2',
+  opacity: 1,
 };
 
 export default Epoch;

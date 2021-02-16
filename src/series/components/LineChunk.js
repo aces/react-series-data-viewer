@@ -38,7 +38,7 @@ const LineMemo = R.memoizeWith(
         scales[0](
           interval[0] + (i / values.length) * (interval[1] - interval[0])
         ),
-        scales[1](value)
+        -scales[1](value)
       )
     );
 

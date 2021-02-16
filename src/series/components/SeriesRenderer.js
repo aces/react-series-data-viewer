@@ -1,9 +1,8 @@
 // @flow
 
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import * as R from 'ramda';
 import {vec2} from 'gl-matrix';
-import {Row, Col, Input, ButtonGroup, Button} from 'reactstrap';
 import {Group} from '@visx/group';
 import {connect} from 'react-redux';
 import {scaleLinear} from 'd3-scale';
@@ -14,7 +13,12 @@ import LineChunk from './LineChunk';
 import Epoch from './Epoch';
 import SeriesCursor from './SeriesCursor';
 import {setCursor} from '../store/state/cursor';
+import {setFilteredEpochs} from '../store/state/dataset';
 import {setOffsetIndex} from '../store/logic/pagination';
+import IntervalSelect from './IntervalSelect';
+import EventManager from './EventManager';
+import AnnotationForm from './AnnotationForm';
+
 import {
   setAmplitudesScale,
   resetAmplitudesScale,
@@ -25,7 +29,15 @@ import {
   HIGH_PASS_FILTERS,
   setHighPassFilter,
 } from '../store/logic/highLowPass';
-import {setViewerWidth, setViewerHeight} from '../store/state/bounds';
+import {
+  setViewerWidth,
+  setViewerHeight,
+} from '../store/state/bounds';
+import {
+  continueDragSelection,
+  endDragSelection,
+  startDragSelection,
+} from '../store/logic/timeSelection';
 
 import type {
   ChannelMetadata,
@@ -39,11 +51,14 @@ type Props = {
   interval: [number, number],
   amplitudeScale: number,
   cursor: ?number,
+  timeSelection: ?[number, number],
   setCursor: (?number) => void,
   channels: Channel[],
   channelMetadata: ChannelMetadata[],
   hidden: number[],
   epochs: EpochType[],
+  filteredEpochs: number[],
+  activeEpoch: number,
   offsetIndex: number,
   setOffsetIndex: number => void,
   setAmplitudesScale: number => void,
@@ -52,7 +67,11 @@ type Props = {
   setHighPassFilter: string => void,
   setViewerWidth: number => void,
   setViewerHeight: number => void,
-  limit: number
+  setFilteredEpochs: number[] => void,
+  dragStart: number => void,
+  dragContinue: number => void,
+  dragEnd: number => void,
+  limit: number,
 };
 
 const SeriesRenderer = ({
@@ -61,11 +80,14 @@ const SeriesRenderer = ({
   interval,
   amplitudeScale,
   cursor,
+  timeSelection,
   setCursor,
   channels,
   channelMetadata,
   hidden,
   epochs,
+  filteredEpochs,
+  activeEpoch,
   offsetIndex,
   setOffsetIndex,
   setAmplitudesScale,
@@ -74,11 +96,33 @@ const SeriesRenderer = ({
   setHighPassFilter,
   setViewerWidth,
   setViewerHeight,
+  setFilteredEpochs,
+  dragStart,
+  dragContinue,
+  dragEnd,
   limit,
 }: Props) => {
   useEffect(() => {
     setViewerHeight(viewerHeight);
   }, [viewerHeight]);
+
+  useEffect(() => {
+    if (refNode) {
+      setBounds(refNode.getBoundingClientRect());
+    }
+  }, [viewerWidth]);
+
+  const [highPass, setHighPass] = useState('none');
+  const [lowPass, setLowPass] = useState('none');
+  const [showEventPanel, setShowEventPanel] = useState(false);
+  const [showNewAnnotationForm, setShowNewAnnotationForm] = useState(false);
+  const [refNode, setRefNode] = useState<?HTMLDivElement>(null);
+  const [bounds, setBounds] = useState<?ClientRect>(null);
+  const getBounds = useCallback((domNode) => {
+    if (domNode) {
+      setRefNode(domNode);
+    }
+  }, []);
 
   const topLeft = vec2.fromValues(
     -viewerWidth/2,
@@ -125,24 +169,39 @@ const SeriesRenderer = ({
     );
   };
 
-  const filteredEpochs = epochs.filter(
-    (epoch) =>
-      epoch.onset + epoch.duration > interval[0] && epoch.onset < interval[1]
-  );
-
   const EpochsLayer = () => {
     return (
       <Group>
-        {filteredEpochs.slice(0, MAX_RENDERED_EPOCHS).map((epoch, i) => {
+        {filteredEpochs.length < MAX_RENDERED_EPOCHS &&
+          filteredEpochs.map((index) => {
             return (
               <Epoch
-                {...epoch}
+                {...epochs[index]}
                 parentHeight={viewerHeight}
-                key={`${i}-${epochs.length}`}
+                key={`${index}`}
                 scales={scales}
               />
             );
-          })}
+          })
+        }
+        {timeSelection &&
+          <Epoch
+            onset={timeSelection[0]}
+            duration={timeSelection[1] - timeSelection[0]}
+            color={'#ffcccc'}
+            parentHeight={viewerHeight}
+            scales={scales}
+            opacity={0.5}
+          />
+        }
+        {activeEpoch !== null &&
+          <Epoch
+            {...epochs[activeEpoch]}
+            parentHeight={viewerHeight}
+            scales={scales}
+            color={'#ffb2b2'}
+          />
+        }
       </Group>
     );
   };
@@ -162,7 +221,7 @@ const SeriesRenderer = ({
               range={[i * axisHeight, (i + 1) * axisHeight]}
               format={() => ''}
               orientation='right'
-              hideLine='true'
+              hideLine={true}
             />
           );
         })}
@@ -178,7 +237,12 @@ const SeriesRenderer = ({
     return (
       <>
         <clipPath id='lineChunk' clipPathUnits='userSpaceOnUse'>
-          <rect x={-viewerWidth / 2} y={-viewerHeight / 12} width={viewerWidth} height={viewerHeight / 6}/>
+          <rect
+            x={-viewerWidth / 2}
+            y={-viewerHeight / (2 * MAX_CHANNELS)}
+            width={viewerWidth}
+            height={viewerHeight / MAX_CHANNELS}
+          />
         </clipPath>
 
         {filteredChannels.map((channel, i) => {
@@ -239,146 +303,301 @@ const SeriesRenderer = ({
     );
   };
 
-  const highPassFilters = Object.keys(HIGH_PASS_FILTERS).map((key) =>
-    <option value={key} key={key}>{HIGH_PASS_FILTERS[key].label}</option>
-  );
-
-  const lowPassFilters = Object.keys(LOW_PASS_FILTERS).map((key) =>
-    <option value={key} key={key}>{LOW_PASS_FILTERS[key].label}</option>
-  );
-
   const hardLimit = Math.min(offsetIndex + limit - 1, channelMetadata.length);
 
-  return channels.length > 0 ? (
+  const onMouseMove = (v : MouseEvent) => {
+    if (bounds === null || bounds === undefined) return;
+    const x = Math.min(1, Math.max(0, (v.pageX - bounds.left)/bounds.width));
+    return (dragContinue)(x);
+  };
+
+  const onMouseUp = (v : MouseEvent) => {
+    if (bounds === null || bounds === undefined) return;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    const x = Math.min(100, Math.max(0, (v.pageX - bounds.left)/bounds.width));
+    return (dragEnd)(x);
+  };
+
+  return (
     <>
-      <Row className='no-gutters'>
-        <Col xs={2}/>
-        <Col xs={10}>
-          <Row style={{paddingTop: '10px', paddingBottom: '10px'}}>
-            <Col xs={2}>
-              <ButtonGroup>
-                <Button
-                  onClick={() => setAmplitudesScale(1.1)}
-                >-</Button>
-                <Button
-                  onClick={() => resetAmplitudesScale()}
-                >Reset</Button>
-                <Button
-                  onClick={() => setAmplitudesScale(0.9)}
-                >+</Button>
-              </ButtonGroup>
-            </Col>
-            <Col xs={2}>
-              <Input
-                type="select"
-                name="highPassFilters"
-                onChange={(e) => setHighPassFilter(e.target.value)}
-              >
-                {highPassFilters}
-              </Input>
-            </Col>
-            <Col xs={2}>
-              <Input
-                type="select"
-                name="lowPassFilters"
-                onChange={(e) => setLowPassFilter(e.target.value)}
-              >
-                {lowPassFilters}
-              </Input>
-            </Col>
-            <Col xs={2}>
-              <ButtonGroup>
-                <Button onClick={() => setOffsetIndex(offsetIndex - limit)}>
-                  &lt;&lt;
-                </Button>
-                <Button onClick={() => setOffsetIndex(offsetIndex - 1)}>
-                  &lt;
-                </Button>
-                <Button onClick={() => setOffsetIndex(offsetIndex + 1)}>
-                  &gt;
-                </Button>
-                <Button onClick={() => setOffsetIndex(offsetIndex + limit)}>
-                  &gt;&gt;
-                </Button>
-              </ButtonGroup>
-            </Col>
-            <Col xs={4}>
-              Showing{' '}
-              <div style={{display: 'inline-block', width: '80px'}}>
-                <Input
-                  type='number'
-                  value={offsetIndex}
-                  onChange={(e) => setOffsetIndex(e.target.value)}
-                />
+      {channels.length > 0 ? (
+        <>
+          <div className='row'>
+            <div className={showNewAnnotationForm || showEventPanel ? 'col-xs-10' : 'col-xs-12'}>
+              <IntervalSelect />
+              <div className='row'>
+                <div className='col-xs-2'/>
+                <div className='col-xs-10'>
+                  <div
+                    className='row'
+                    style={{paddingTop: '10px', paddingBottom: '10px'}}
+                  >
+                    <div className='col-xs-12'>
+                      <div
+                        className='btn-group'
+                      >
+                        <input
+                          type='button'
+                          style={{width: '25px'}}
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setAmplitudesScale(1.1)}
+                          value='-'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => resetAmplitudesScale()}
+                          value='Reset'
+                        />
+                        <input
+                          type='button'
+                          style={{width: '25px'}}
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setAmplitudesScale(0.9)}
+                          value='+'
+                        />
+                      </div>
+
+                      <div
+                        className='btn-group'
+                        style={{position: 'relative'}}
+                      >
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-primary dropdown-toggle"
+                          data-toggle='dropdown'
+                        >
+                          <div className="col-xs-10">
+                            <span className="pull-left">
+                              {HIGH_PASS_FILTERS[highPass].label}
+                            </span>
+                          </div>
+                          <div className="pull-right">
+                            <span className="glyphicon glyphicon-menu-down"></span>
+                          </div>
+                        </button>
+                        <ul className="dropdown-menu">
+                          {Object.keys(HIGH_PASS_FILTERS).map((key) =>
+                            <li
+                              key={key}
+                              onClick={(e) => {
+                                setHighPassFilter(key);
+                                setHighPass(key);
+                              }}
+                            >{HIGH_PASS_FILTERS[key].label}</li>
+                          )}
+                        </ul>
+                      </div>
+
+                      <div
+                        className='btn-group'
+                        style={{position: 'relative'}}
+                      >
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-primary dropdown-toggle"
+                          data-toggle='dropdown'
+                        >
+                          <div className="col-xs-10">
+                            <span className="pull-left">
+                              {LOW_PASS_FILTERS[lowPass].label}
+                            </span>
+                          </div>
+                          <div className="pull-right">
+                            <span className="glyphicon glyphicon-menu-down"></span>
+                          </div>
+                        </button>
+                        <ul className="dropdown-menu">
+                          {Object.keys(LOW_PASS_FILTERS).map((key) =>
+                            <li
+                              key={key}
+                              onClick={(e) => {
+                                setLowPassFilter(key);
+                                setLowPass(key);
+                              }}
+                            >{LOW_PASS_FILTERS[key].label}</li>
+                          )}
+                        </ul>
+                      </div>
+
+                      <div className='btn-group'>
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex - limit)}
+                          value='<<'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex - 1)}
+                          value='<'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex + 1)}
+                          value='>'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex + limit)}
+                          value='>>'
+                        />
+                      </div>
+
+                      <small
+                        style={{
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                        }}
+                        className='pull-right'
+                      >
+                        Showing{' '}
+                        <input
+                          type='number'
+                          style={{width: '60px'}}
+                          value={offsetIndex}
+                          onChange={(e) => setOffsetIndex(e.target.value)}
+                        />
+                        {' '}
+                        to {hardLimit} of {channelMetadata.length}
+                      </small>
+                    </div>
+                  </div>
+                </div>
               </div>
-              {' '}
-              to {hardLimit} of {channelMetadata.length}
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-      <Row noGutters>
-        <Col
-          xs={2}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          {filteredChannels.map((channel) => (
-            <div
-              key={channel.index}
-              style={{
-                display: 'flex',
-                height: 1 / MAX_CHANNELS * 100 + '%',
-                alignItems: 'center',
-              }}
-            >
-              {channelMetadata[channel.index] &&
-              channelMetadata[channel.index].name}
+              <div className='row'>
+                <div
+                  className='col-xs-2'
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    height: viewerHeight,
+                  }}
+                >
+                  {filteredChannels.map((channel) => (
+                    <div
+                      key={channel.index}
+                      style={{
+                        display: 'flex',
+                        height: 1 / MAX_CHANNELS * 100 + '%',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {channelMetadata[channel.index] &&
+                      channelMetadata[channel.index].name}
+                    </div>
+                  ))}
+                </div>
+                <div
+                  className='col-xs-10'
+                  style={{position: 'relative'}}
+                  onMouseLeave={() => setCursor(null)}
+                >
+                  {cursor && (
+                    <SeriesCursor
+                      cursor={cursor}
+                      channels={channels}
+                      interval={interval}
+                    />
+                  )}
+                  <div style={{height: viewerHeight}} ref={getBounds}>
+                    <ResponsiveViewer
+                      transparent={true}
+                      mouseMove={R.compose(setCursor, R.nth(0))}
+                      mouseDown={(v) => {
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                        R.compose(dragStart, R.nth(0))(v);
+                      }}
+                    >
+                      <EpochsLayer/>
+                      <ChannelsLayer
+                        viewerWidth={0}
+                      />
+                      <XAxisLayer
+                        viewerWidth={0}
+                        viewerHeight={0}
+                        interval={interval}
+                      />
+                      <ChannelAxesLayer
+                        viewerWidth={0}
+                        viewerHeight={0}
+                      />
+                    </ResponsiveViewer>
+                  </div>
+                </div>
+              </div>
+              <div
+                className='row no-gutters'
+                style={{
+                  marginTop: '25px',
+                  marginBottom: '25px',
+                }}
+              >
+                <div className='col-xs-2'></div>
+                <div className='col-xs-10'>
+                  <div className='col-xs-6'>
+                    <button
+                      className={'btn btn-primary btn-xs' + (showNewAnnotationForm ? ' active' : '')}
+                      onClick={() => {
+                        setShowNewAnnotationForm(!showNewAnnotationForm);
+                        setShowEventPanel(false);
+                      }}
+                    >
+                      New Annotation
+                    </button>
+                    <button
+                      className={'btn btn-primary btn-xs' + (showEventPanel ? ' active' : '')}
+                      onClick={() => {
+                        setShowEventPanel(!showEventPanel);
+                        setShowNewAnnotationForm(false);
+                      }}
+                    >
+                      Show Event Panel
+                    </button>
+                  </div>
+                  <div
+                    className='col-xs-6'
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
+                    <div
+                      style={{
+                        padding: '5px',
+                        background: '#eee',
+                        alignSelf: 'flex-end',
+                      }}
+                    >
+                      Too many events to display for the timeline range.
+                      Limit the time range.
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
-        </Col>
-        <Col
-          xs={10}
-          style={{position: 'relative'}}
-          onMouseLeave={() => setCursor(null)}
-        >
-          {cursor && (
-            <SeriesCursor
-              cursor={cursor}
-              channels={channels}
-              epochs={filteredEpochs}
-              interval={interval}
-            />
-          )}
-          <div style={{height: viewerHeight}}>
-            <ResponsiveViewer
-              name='series'
-              transparent={true}
-              mouseMove={R.compose(
-                setCursor,
-                R.nth(0)
-              )}
-            >
-              <EpochsLayer/>
-              <ChannelsLayer/>
-              <XAxisLayer
-                viewerWidth={0}
-                viewerHeight={0}
-                interval={interval}
-              />
-              <ChannelAxesLayer viewerHeight={0}/>
-            </ResponsiveViewer>
+            {(showNewAnnotationForm || showEventPanel) &&
+              <div className='col-xs-2'>
+                {showNewAnnotationForm && <AnnotationForm />}
+                {showEventPanel && <EventManager />}
+              </div>
+            }
           </div>
-        </Col>
-      </Row>
+        </>
+      ) : (
+        <div style={{width: '100%', height: '100%'}}>
+          <h4>Loading...</h4>
+        </div>
+      )}
     </>
-  ) : (
-    <div style={{width: '100%', height: '100%'}}>
-      <h4>Loading...</h4>
-    </div>
   );
 };
 
@@ -402,8 +621,11 @@ export default connect(
     interval: state.bounds.interval,
     amplitudeScale: state.bounds.amplitudeScale,
     cursor: state.cursor,
+    timeSelection: state.timeSelection,
     channels: state.dataset.channels,
     epochs: state.dataset.epochs,
+    filteredEpochs: state.dataset.filteredEpochs,
+    activeEpoch: state.dataset.activeEpoch,
     hidden: state.montage.hidden,
     channelMetadata: state.dataset.channelMetadata,
     offsetIndex: state.dataset.offsetIndex,
@@ -440,6 +662,22 @@ export default connect(
     setViewerHeight: R.compose(
       dispatch,
       setViewerHeight
+    ),
+    setFilteredEpochs: R.compose(
+      dispatch,
+      setFilteredEpochs
+    ),
+    dragStart: R.compose(
+      dispatch,
+      startDragSelection
+    ),
+    dragContinue: R.compose(
+      dispatch,
+      continueDragSelection
+    ),
+    dragEnd: R.compose(
+      dispatch,
+      endDragSelection
     ),
   })
 )(SeriesRenderer);
