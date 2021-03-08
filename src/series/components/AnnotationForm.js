@@ -47,8 +47,21 @@ const AnnotationForm = ({
       className="panel panel-primary"
       id='new_annotation'
     >
-      <div className="panel-heading">
+      <div
+        className="panel-heading"
+        style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+      >
         New Annotation
+        <i
+          className='glyphicon glyphicon-remove'
+          onClick={() => {
+            // setShowEventPanel(false)
+          }}
+        ></i>
       </div>
       <div className="panel-body">
         <div className="form-row no-gutters">
@@ -56,7 +69,7 @@ const AnnotationForm = ({
             <label htmlFor="start-time">Start time</label>
             <input
               type="number"
-              className="form-control"
+              className="form-control input-sm"
               id="start-time"
               placeholder="Start time"
               onChange={(e) => {
@@ -74,7 +87,7 @@ const AnnotationForm = ({
             <label htmlFor="end-time">End time</label>
             <input
               type="number"
-              className="form-control"
+              className="form-control input-sm"
               id="end-time"
               placeholder="End time"
               onChange={(e) => {
@@ -91,7 +104,7 @@ const AnnotationForm = ({
         </div>
         <div className="form-group">
           <label htmlFor="label">Label</label>
-          <select className="form-control" id="label">
+          <select className="form-control input-sm" id="label">
             <option></option>
             <option>Artifact</option>
             <option>Motion</option>
@@ -126,7 +139,7 @@ const AnnotationForm = ({
             rows="3"
           ></textarea>
         </div>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary btn-xs">
           Submit
         </button>
       </div>

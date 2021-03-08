@@ -27,8 +27,22 @@ const EventManager = ({
   return (
     <>
       <div className="panel panel-primary event-list">
-        <div className="panel-heading">
-          Events in timeline view
+        <div
+          className="panel-heading"
+          style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+        >
+          Events/Annotations <br/>
+          in timeline view
+          <i
+            className='glyphicon glyphicon-remove'
+            onClick={() => {
+              // setShowEventPanel(false)
+            }}
+          ></i>
         </div>
         <div
           className="panel-body"
@@ -37,7 +51,7 @@ const EventManager = ({
           <div
             className="list-group"
             style={{
-              maxHeight: '450px',
+              maxHeight: '435px',
               overflowY: 'scroll',
               marginBottom: 0,
             }}
@@ -51,20 +65,20 @@ const EventManager = ({
               return (
                 <div
                   key={index}
-                  className='list-group-item list-group-item-action'
+                  className={(epoch.type == 'Annotation' ? 'annotation ' : '') + 'list-group-item list-group-item-action'}
                   style={{
                     position: 'relative',
                   }}
                 >
-                  {epoch.type} <br/>
+                  {epoch.label} <br/>
                   {epoch.onset}{epoch.duration > 0
                   && ' - ' + (epoch.onset + epoch.duration)}
                   <button
                     data-toggle="button"
                     aria-pressed={visible}
                     type="button"
-                    className={(visible ? 'active ' : '')
-                      + 'btn btn-xs'}
+                    className={(visible ? '' : 'active ')
+                      + 'btn btn-xs btn-primary'}
                     onClick={() => toggleEpoch(index)}
                     onMouseEnter={() => updateActiveEpoch(index)}
                     onMouseLeave={() => updateActiveEpoch(null)}

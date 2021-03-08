@@ -123,7 +123,7 @@ const SeriesCursor = (
           borderRadius: '3px',
         }}
       >
-        {epochs[index].type}
+        {epochs[index].label}
       </div>
     ) : null;
   };

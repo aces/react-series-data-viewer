@@ -333,7 +333,7 @@ const SeriesRenderer = ({
                     className='row'
                     style={{paddingTop: '10px', paddingBottom: '10px'}}
                   >
-                    <div className='col-xs-12'>
+                    <div className='col-xs-6'>
                       <div
                         className='btn-group'
                       >
@@ -358,7 +358,6 @@ const SeriesRenderer = ({
                           value='+'
                         />
                       </div>
-
                       <div
                         className='btn-group'
                         style={{position: 'relative'}}
@@ -420,51 +419,26 @@ const SeriesRenderer = ({
                           )}
                         </ul>
                       </div>
-
-                      <div className='btn-group'>
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex - limit)}
-                          value='<<'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex - 1)}
-                          value='<'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex + 1)}
-                          value='>'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex + limit)}
-                          value='>>'
-                        />
-                      </div>
-
-                      <small
+                    </div>
+                    <div
+                      className='col-xs-6'
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
+                      <div
                         style={{
-                          display: 'inline-block',
-                          whiteSpace: 'nowrap',
+                          padding: '5px',
+                          background: '#eee',
+                          alignSelf: 'flex-end',
                         }}
-                        className='pull-right'
                       >
-                        Showing{' '}
-                        <input
-                          type='number'
-                          style={{width: '60px'}}
-                          value={offsetIndex}
-                          onChange={(e) => setOffsetIndex(e.target.value)}
-                        />
-                        {' '}
-                        to {hardLimit} of {channelMetadata.length}
-                      </small>
+                        Too many events to display for the timeline range.
+                        Limit the time range.
+                      </div>
+                      }
                     </div>
                   </div>
                 </div>
@@ -533,7 +507,7 @@ const SeriesRenderer = ({
                 </div>
               </div>
               <div
-                className='row no-gutters'
+                className='row'
                 style={{
                   marginTop: '25px',
                   marginBottom: '25px',
@@ -541,45 +515,72 @@ const SeriesRenderer = ({
               >
                 <div className='col-xs-2'></div>
                 <div className='col-xs-10'>
-                  <div className='col-xs-6'>
-                    <button
-                      className={'btn btn-primary btn-xs' + (showNewAnnotationForm ? ' active' : '')}
-                      onClick={() => {
-                        setShowNewAnnotationForm(!showNewAnnotationForm);
-                        setShowEventPanel(false);
-                      }}
-                    >
-                      New Annotation
-                    </button>
-                    <button
-                      className={'btn btn-primary btn-xs' + (showEventPanel ? ' active' : '')}
-                      onClick={() => {
-                        setShowEventPanel(!showEventPanel);
-                        setShowNewAnnotationForm(false);
-                      }}
-                    >
-                      Show Event Panel
-                    </button>
-                  </div>
-                  <div
-                    className='col-xs-6'
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
+                  <button
+                    className={'btn btn-primary btn-xs' + (showNewAnnotationForm ? ' active' : '')}
+                    onClick={() => {
+                      setShowNewAnnotationForm(!showNewAnnotationForm);
+                      setShowEventPanel(false);
                     }}
                   >
-                    {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
-                    <div
+                    {showNewAnnotationForm ? 'Close Annotation form' : 'New Annotation'}
+                  </button>
+                  <button
+                    className={'btn btn-primary btn-xs' + (showEventPanel ? ' active' : '')}
+                    onClick={() => {
+                      setShowEventPanel(!showEventPanel);
+                      setShowNewAnnotationForm(false);
+                    }}
+                  >
+                    {showEventPanel ? 'Hide Epoch Panel' : 'Show Epoch Panel'}
+                  </button>
+
+                  <div className='pull-right'>
+                    <small
                       style={{
-                        padding: '5px',
-                        background: '#eee',
-                        alignSelf: 'flex-end',
+                        display: 'inline-block',
+                        whiteSpace: 'nowrap',
+                        marginRight: '10px',
                       }}
                     >
-                      Too many events to display for the timeline range.
-                      Limit the time range.
+                      Showing{' '}
+                      <input
+                        type='number'
+                        style={{width: '55px'}}
+                        value={offsetIndex}
+                        onChange={(e) => setOffsetIndex(e.target.value)}
+                      />
+                      {' '}
+                      to {hardLimit} of {channelMetadata.length}
+                    </small>
+                    <div
+                      className='btn-group'
+                      style={{marginRight: 0}}
+                    >
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex - limit)}
+                        value='<<'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex - 1)}
+                        value='<'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex + 1)}
+                        value='>'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex + limit)}
+                        value='>>'
+                      />
                     </div>
-                    }
                   </div>
                 </div>
               </div>
