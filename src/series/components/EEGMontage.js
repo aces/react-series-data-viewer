@@ -105,7 +105,7 @@ const EEGMontage = (
       electrode.position[1] * 10,
       electrode.position[2] * 10
     );
-    scatter2D.push({x: x * 150, y: y * 150});
+    scatter2D.push({x: x * 150, y: y * 150 / 0.8});
   });
 
   const Montage3D = () => (
@@ -128,98 +128,130 @@ const EEGMontage = (
 
   const Montage2D = () => (
     <Group>
+      <line
+        x1="25" y1="-138"
+        x2="0" y2="-160"
+        stroke="black"
+      />
+      <line
+        x1="-25" y1="-138"
+        x2="0" y2="-160"
+        stroke="black"
+      />
+      <ellipse
+        cx="140" cy="0"
+        rx="15" ry="40"
+        stroke="black"
+        fillOpacity='0'
+      />
+      <ellipse
+        cx="-140" cy="0"
+        rx="15" ry="40"
+        stroke="black"
+        fillOpacity='0'
+      />
+      <circle
+        r='140'
+        stroke="black"
+        fill='white'
+      />
       {scatter2D.map((point, i) =>
+        <Group key={i}>
           <circle
-            key={i}
+            transform='rotate(-90)'
             cx={point.x}
             cy={point.y}
-            r='4'
-            fill={color}
-            fillOpacity='0.3'
-            opacity='1'
+            r='8'
+            fill='white'
+            stroke={color}
           />
+          <text
+            transform={'rotate(-90) rotate(90, ' + point.x + ', ' + point.y + ')'}
+            x={point.x}
+            y={point.y}
+            dominantBaseline="central"
+            textAnchor="middle"
+            fontSize="8px"
+          >{i + 1}</text>
+        </Group>
         )}
     </Group>
   );
 
   return (
     <>
-      <div className='col-xs-6'>
-        <div className="panel panel-primary">
-          <div className="panel-heading">
-            Electrodes Montage
-          </div>
+      <div
+        className="row"
+        style={{
+          padding: 0,
+          height: '330px',
+        }}
+      >
+        <div
+          className={'col-xs-4'}
+          style={{height: '100%'}}
+        >
           <div
-            className="panel-body row"
+            className="list-group"
             style={{
-              padding: 0,
-              height: '330px',
+              maxHeight: '100%',
+              overflowY: 'scroll',
+              marginBottom: 0,
             }}
           >
-            <div
-              className={'col-xs-4'}
-              style={{height: '100%'}}
-            >
-              <div
-                className="list-group"
-                style={{
-                  maxHeight: '100%',
-                  overflowY: 'scroll',
-                  marginBottom: 0,
-                }}
-              >
-                {electrodes.map((electrode, i) => {
-                  return (
-                    <div
-                      key={i}
-                      className='list-group-item list-group-item-action'
-                      style={{
-                        position: 'relative',
-                      }}
-                    >
-                      {electrode.name}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className={'col-xs-8'} style={{height: '100%'}}>
-              {view3D ?
-                <div className={'col-xs-12'} style={{height: '100%'}}>
-                  <ResponsiveViewer
-                  mouseMove={dragged}
-                  mouseDown={dragStart}
-                  mouseUp={dragEnd}
-                  mouseLeave={dragEnd}
-                  >
-                    <Montage3D />
-                  </ResponsiveViewer>
+            {electrodes.map((electrode, i) => {
+              return (
+                <div
+                  key={i}
+                  className='list-group-item list-group-item-action'
+                  style={{
+                    position: 'relative',
+                  }}
+                >
+                  <small>{i+1}. </small>
+                  <strong
+                    style={{color: 'rgb(7, 71, 133)'}}
+                  >{electrode.name}</strong>
                 </div>
-              :
-                <div className={'col-xs-12'} style={{height: '100%'}}>
-                  <ResponsiveViewer>
-                    <Montage2D />
-                  </ResponsiveViewer>
-                </div>
-              }
-              <div
-                className="btn-group"
-                style={{
-                  top: '15px',
-                  left: 0,
-                  position: 'absolute',
-                }}
+              );
+            })}
+          </div>
+        </div>
+        <div className={'col-xs-8'} style={{height: '100%'}}>
+          {view3D ?
+            <div className={'col-xs-12'} style={{height: '100%'}}>
+              <ResponsiveViewer
+              mouseMove={dragged}
+              mouseDown={dragStart}
+              mouseUp={dragEnd}
+              mouseLeave={dragEnd}
               >
-                <button
-                  className={'btn btn-xs btn-default' + (!view3D ? ' active' : '')}
-                  onClick={() =>setView3D(false)}
-                >2D</button>
-                <button
-                  className={'btn btn-xs btn-default' + (view3D ? ' active' : '')}
-                  onClick={() => setView3D(true)}
-                >3D</button>
-              </div>
+                <Montage3D />
+              </ResponsiveViewer>
             </div>
+          :
+            <div className={'col-xs-12'} style={{height: '100%'}}>
+              <ResponsiveViewer>
+                <Montage2D />
+              </ResponsiveViewer>
+            </div>
+          }
+          <div
+            className="btn-group"
+            style={{
+              top: '15px',
+              left: 0,
+              position: 'absolute',
+            }}
+          >
+            <button
+              className={'btn btn-xs btn-default' + (!view3D ? ' active' : '')}
+              onClick={() =>setView3D(false)}
+            >2D</button>
+            <button
+              className={'btn btn-xs btn-default' + (view3D ? ' active' : '')}
+              onClick={() => setView3D(true)}
+            >3D</button>
           </div>
         </div>
       </div>

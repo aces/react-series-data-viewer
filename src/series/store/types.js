@@ -28,9 +28,13 @@ export type Channel = {
 export type Epoch = {
   onset: number,
   duration: number,
-  type: string,
+  type: 'Event' | 'Annotation',
+  label: string,
+  comment: ?string,
   channels: number[] | "all",
 };
+
+export type RightPanel = ?('annotationForm' | 'epochList');
 
 export type Electrode = {
   name: string,

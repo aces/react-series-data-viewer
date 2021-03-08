@@ -1,9 +1,10 @@
 // @flow
 
 import React, {useEffect, useState} from 'react';
-import type {Epoch as EpochType} from '../store/types';
+import type {Epoch as EpochType, RightPanel} from '../store/types';
 import {connect} from 'react-redux';
 import {setTimeSelection} from '../store/state/timeSelection';
+import {setRightPanel} from '../store/state/rightPanel';
 import * as R from 'ramda';
 import {toggleEpoch, updateActiveEpoch} from '../store/logic/filterEpochs';
 
@@ -12,6 +13,7 @@ type Props = {
   epochs: EpochType[],
   filteredEpochs: number[],
   setTimeSelection: [?number, ?number] => void,
+  setRightPanel: RightPanel => void,
   toggleEpoch: number => void,
   updateActiveEpoch: ?number => void,
   interval: [number, number],
@@ -22,6 +24,7 @@ const AnnotationForm = ({
   epochs,
   filteredEpochs,
   setTimeSelection,
+  setRightPanel,
   toggleEpoch,
   updateActiveEpoch,
   interval,
@@ -47,8 +50,22 @@ const AnnotationForm = ({
       className="panel panel-primary"
       id='new_annotation'
     >
-      <div className="panel-heading">
+      <div
+        className="panel-heading"
+        style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+      >
         New Annotation
+        <i
+          className='glyphicon glyphicon-remove'
+          style={{cursor: 'pointer'}}
+          onClick={() => {
+            setRightPanel(null);
+          }}
+        ></i>
       </div>
       <div className="panel-body">
         <div className="form-row no-gutters">
@@ -56,7 +73,7 @@ const AnnotationForm = ({
             <label htmlFor="start-time">Start time</label>
             <input
               type="number"
-              className="form-control"
+              className="form-control input-sm"
               id="start-time"
               placeholder="Start time"
               onChange={(e) => {
@@ -74,7 +91,7 @@ const AnnotationForm = ({
             <label htmlFor="end-time">End time</label>
             <input
               type="number"
-              className="form-control"
+              className="form-control input-sm"
               id="end-time"
               placeholder="End time"
               onChange={(e) => {
@@ -91,7 +108,7 @@ const AnnotationForm = ({
         </div>
         <div className="form-group">
           <label htmlFor="label">Label</label>
-          <select className="form-control" id="label">
+          <select className="form-control input-sm" id="label">
             <option></option>
             <option>Artifact</option>
             <option>Motion</option>
@@ -126,7 +143,7 @@ const AnnotationForm = ({
             rows="3"
           ></textarea>
         </div>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary btn-xs">
           Submit
         </button>
       </div>
@@ -151,6 +168,10 @@ export default connect(
     setTimeSelection: R.compose(
       dispatch,
       setTimeSelection
+    ),
+    setRightPanel: R.compose(
+      dispatch,
+      setRightPanel
     ),
     toggleEpoch: R.compose(
       dispatch,

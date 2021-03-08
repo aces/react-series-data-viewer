@@ -13,6 +13,7 @@ import LineChunk from './LineChunk';
 import Epoch from './Epoch';
 import SeriesCursor from './SeriesCursor';
 import {setCursor} from '../store/state/cursor';
+import {setRightPanel} from '../store/state/rightPanel';
 import {setFilteredEpochs} from '../store/state/dataset';
 import {setOffsetIndex} from '../store/logic/pagination';
 import IntervalSelect from './IntervalSelect';
@@ -43,6 +44,7 @@ import type {
   ChannelMetadata,
   Channel,
   Epoch as EpochType,
+  RightPanel,
 } from '../store/types';
 
 type Props = {
@@ -50,9 +52,11 @@ type Props = {
   viewerHeight: number,
   interval: [number, number],
   amplitudeScale: number,
+  rightPanel: RightPanel,
   cursor: ?number,
   timeSelection: ?[number, number],
   setCursor: (?number) => void,
+  setRightPanel: RightPanel => void,
   channels: Channel[],
   channelMetadata: ChannelMetadata[],
   hidden: number[],
@@ -80,8 +84,10 @@ const SeriesRenderer = ({
   interval,
   amplitudeScale,
   cursor,
+  rightPanel,
   timeSelection,
   setCursor,
+  setRightPanel,
   channels,
   channelMetadata,
   hidden,
@@ -114,8 +120,6 @@ const SeriesRenderer = ({
 
   const [highPass, setHighPass] = useState('none');
   const [lowPass, setLowPass] = useState('none');
-  const [showEventPanel, setShowEventPanel] = useState(false);
-  const [showNewAnnotationForm, setShowNewAnnotationForm] = useState(false);
   const [refNode, setRefNode] = useState<?HTMLDivElement>(null);
   const [bounds, setBounds] = useState<?ClientRect>(null);
   const getBounds = useCallback((domNode) => {
@@ -324,7 +328,7 @@ const SeriesRenderer = ({
       {channels.length > 0 ? (
         <>
           <div className='row'>
-            <div className={showNewAnnotationForm || showEventPanel ? 'col-xs-10' : 'col-xs-12'}>
+            <div className={rightPanel ? 'col-xs-10' : 'col-xs-12'}>
               <IntervalSelect />
               <div className='row'>
                 <div className='col-xs-2'/>
@@ -333,7 +337,7 @@ const SeriesRenderer = ({
                     className='row'
                     style={{paddingTop: '10px', paddingBottom: '10px'}}
                   >
-                    <div className='col-xs-12'>
+                    <div className='col-xs-6'>
                       <div
                         className='btn-group'
                       >
@@ -358,7 +362,6 @@ const SeriesRenderer = ({
                           value='+'
                         />
                       </div>
-
                       <div
                         className='btn-group'
                         style={{position: 'relative'}}
@@ -420,51 +423,26 @@ const SeriesRenderer = ({
                           )}
                         </ul>
                       </div>
-
-                      <div className='btn-group'>
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex - limit)}
-                          value='<<'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex - 1)}
-                          value='<'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex + 1)}
-                          value='>'
-                        />
-                        <input
-                          type='button'
-                          className='btn btn-primary btn-xs'
-                          onClick={() => setOffsetIndex(offsetIndex + limit)}
-                          value='>>'
-                        />
-                      </div>
-
-                      <small
+                    </div>
+                    <div
+                      className='col-xs-6'
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
+                      <div
                         style={{
-                          display: 'inline-block',
-                          whiteSpace: 'nowrap',
+                          padding: '5px',
+                          background: '#eee',
+                          alignSelf: 'flex-end',
                         }}
-                        className='pull-right'
                       >
-                        Showing{' '}
-                        <input
-                          type='number'
-                          style={{width: '60px'}}
-                          value={offsetIndex}
-                          onChange={(e) => setOffsetIndex(e.target.value)}
-                        />
-                        {' '}
-                        to {hardLimit} of {channelMetadata.length}
-                      </small>
+                        Too many events to display for the timeline range.
+                        Limit the time range.
+                      </div>
+                      }
                     </div>
                   </div>
                 </div>
@@ -495,45 +473,46 @@ const SeriesRenderer = ({
                 </div>
                 <div
                   className='col-xs-10'
-                  style={{position: 'relative'}}
                   onMouseLeave={() => setCursor(null)}
                 >
-                  {cursor && (
-                    <SeriesCursor
-                      cursor={cursor}
-                      channels={channels}
-                      interval={interval}
-                    />
-                  )}
-                  <div style={{height: viewerHeight}} ref={getBounds}>
-                    <ResponsiveViewer
-                      transparent={true}
-                      mouseMove={R.compose(setCursor, R.nth(0))}
-                      mouseDown={(v) => {
-                        document.addEventListener('mousemove', onMouseMove);
-                        document.addEventListener('mouseup', onMouseUp);
-                        R.compose(dragStart, R.nth(0))(v);
-                      }}
-                    >
-                      <EpochsLayer/>
-                      <ChannelsLayer
-                        viewerWidth={0}
-                      />
-                      <XAxisLayer
-                        viewerWidth={0}
-                        viewerHeight={0}
+                  <div style={{position: 'relative'}}>
+                    {cursor && (
+                      <SeriesCursor
+                        cursor={cursor}
+                        channels={channels}
                         interval={interval}
                       />
-                      <ChannelAxesLayer
-                        viewerWidth={0}
-                        viewerHeight={0}
-                      />
-                    </ResponsiveViewer>
+                    )}
+                    <div style={{height: viewerHeight}} ref={getBounds}>
+                      <ResponsiveViewer
+                        transparent={true}
+                        mouseMove={R.compose(setCursor, R.nth(0))}
+                        mouseDown={(v) => {
+                          document.addEventListener('mousemove', onMouseMove);
+                          document.addEventListener('mouseup', onMouseUp);
+                          R.compose(dragStart, R.nth(0))(v);
+                        }}
+                      >
+                        <EpochsLayer/>
+                        <ChannelsLayer
+                          viewerWidth={0}
+                        />
+                        <XAxisLayer
+                          viewerWidth={0}
+                          viewerHeight={0}
+                          interval={interval}
+                        />
+                        <ChannelAxesLayer
+                          viewerWidth={0}
+                          viewerHeight={0}
+                        />
+                      </ResponsiveViewer>
+                    </div>
                   </div>
                 </div>
               </div>
               <div
-                className='row no-gutters'
+                className='row'
                 style={{
                   marginTop: '25px',
                   marginBottom: '25px',
@@ -541,53 +520,82 @@ const SeriesRenderer = ({
               >
                 <div className='col-xs-2'></div>
                 <div className='col-xs-10'>
-                  <div className='col-xs-6'>
-                    <button
-                      className={'btn btn-primary btn-xs' + (showNewAnnotationForm ? ' active' : '')}
-                      onClick={() => {
-                        setShowNewAnnotationForm(!showNewAnnotationForm);
-                        setShowEventPanel(false);
-                      }}
-                    >
-                      New Annotation
-                    </button>
-                    <button
-                      className={'btn btn-primary btn-xs' + (showEventPanel ? ' active' : '')}
-                      onClick={() => {
-                        setShowEventPanel(!showEventPanel);
-                        setShowNewAnnotationForm(false);
-                      }}
-                    >
-                      Show Event Panel
-                    </button>
-                  </div>
-                  <div
-                    className='col-xs-6'
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
+                  <button
+                    className={'btn btn-primary btn-xs' + (rightPanel === 'annotationForm' ? ' active' : '')}
+                    onClick={() => {
+                      rightPanel === 'annotationForm'
+                        ? setRightPanel(null)
+                        : setRightPanel('annotationForm');
                     }}
                   >
-                    {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
-                    <div
+                    {rightPanel === 'annotationForm' ? 'Close Annotation form' : 'New Annotation'}
+                  </button>
+                  <button
+                    className={'btn btn-primary btn-xs' + (rightPanel === 'epochList' ? ' active' : '')}
+                    onClick={() => {
+                      rightPanel === 'epochList'
+                        ? setRightPanel(null)
+                        : setRightPanel('epochList');
+                    }}
+                  >
+                    {rightPanel === 'epochList' ? 'Hide Epoch Panel' : 'Show Epoch Panel'}
+                  </button>
+
+                  <div className='pull-right'>
+                    <small
                       style={{
-                        padding: '5px',
-                        background: '#eee',
-                        alignSelf: 'flex-end',
+                        display: 'inline-block',
+                        whiteSpace: 'nowrap',
+                        marginRight: '10px',
                       }}
                     >
-                      Too many events to display for the timeline range.
-                      Limit the time range.
+                      Showing{' '}
+                      <input
+                        type='number'
+                        style={{width: '55px'}}
+                        value={offsetIndex}
+                        onChange={(e) => setOffsetIndex(e.target.value)}
+                      />
+                      {' '}
+                      to {hardLimit} of {channelMetadata.length}
+                    </small>
+                    <div
+                      className='btn-group'
+                      style={{marginRight: 0}}
+                    >
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex - limit)}
+                        value='<<'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex - 1)}
+                        value='<'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex + 1)}
+                        value='>'
+                      />
+                      <input
+                        type='button'
+                        className='btn btn-primary btn-xs'
+                        onClick={() => setOffsetIndex(offsetIndex + limit)}
+                        value='>>'
+                      />
                     </div>
-                    }
                   </div>
                 </div>
               </div>
             </div>
-            {(showNewAnnotationForm || showEventPanel) &&
+            {rightPanel &&
               <div className='col-xs-2'>
-                {showNewAnnotationForm && <AnnotationForm />}
-                {showEventPanel && <EventManager />}
+                {rightPanel === 'annotationForm' && <AnnotationForm />}
+                {rightPanel === 'epochList' && <EventManager />}
               </div>
             }
           </div>
@@ -621,6 +629,7 @@ export default connect(
     interval: state.bounds.interval,
     amplitudeScale: state.bounds.amplitudeScale,
     cursor: state.cursor,
+    rightPanel: state.rightPanel,
     timeSelection: state.timeSelection,
     channels: state.dataset.channels,
     epochs: state.dataset.epochs,
@@ -638,6 +647,10 @@ export default connect(
     setCursor: R.compose(
       dispatch,
       setCursor
+    ),
+    setRightPanel: R.compose(
+      dispatch,
+      setRightPanel
     ),
     setAmplitudesScale: R.compose(
       dispatch,

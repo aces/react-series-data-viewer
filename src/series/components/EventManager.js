@@ -1,9 +1,10 @@
 // @flow
 
 import React from 'react';
-import type {Epoch as EpochType} from '../store/types';
+import type {Epoch as EpochType, RightPanel} from '../store/types';
 import {connect} from 'react-redux';
 import {setTimeSelection} from '../store/state/timeSelection';
+import {setRightPanel} from '../store/state/rightPanel';
 import * as R from 'ramda';
 import {toggleEpoch, updateActiveEpoch} from '../store/logic/filterEpochs';
 
@@ -12,6 +13,7 @@ type Props = {
   epochs: EpochType[],
   filteredEpochs: number[],
   setTimeSelection: [?number, ?number] => void,
+  setRightPanel: RightPanel => void,
   toggleEpoch: number => void,
   updateActiveEpoch: ?number => void,
   interval: [number, number],
@@ -20,6 +22,8 @@ type Props = {
 const EventManager = ({
   epochs,
   filteredEpochs,
+  setTimeSelection,
+  setRightPanel,
   toggleEpoch,
   updateActiveEpoch,
   interval,
@@ -27,8 +31,23 @@ const EventManager = ({
   return (
     <>
       <div className="panel panel-primary event-list">
-        <div className="panel-heading">
-          Events in timeline view
+        <div
+          className="panel-heading"
+          style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+        >
+          Events/Annotations <br/>
+          in timeline view
+          <i
+            className='glyphicon glyphicon-remove'
+            style={{cursor: 'pointer'}}
+            onClick={() => {
+              setRightPanel(null);
+            }}
+          ></i>
         </div>
         <div
           className="panel-body"
@@ -37,7 +56,7 @@ const EventManager = ({
           <div
             className="list-group"
             style={{
-              maxHeight: '450px',
+              maxHeight: '435px',
               overflowY: 'scroll',
               marginBottom: 0,
             }}
@@ -51,20 +70,20 @@ const EventManager = ({
               return (
                 <div
                   key={index}
-                  className='list-group-item list-group-item-action'
+                  className={(epoch.type == 'Annotation' ? 'annotation ' : '') + 'list-group-item list-group-item-action'}
                   style={{
                     position: 'relative',
                   }}
                 >
-                  {epoch.type} <br/>
+                  {epoch.label} <br/>
                   {epoch.onset}{epoch.duration > 0
                   && ' - ' + (epoch.onset + epoch.duration)}
                   <button
                     data-toggle="button"
                     aria-pressed={visible}
                     type="button"
-                    className={(visible ? 'active ' : '')
-                      + 'btn btn-xs'}
+                    className={(visible ? '' : 'active ')
+                      + 'btn btn-xs btn-primary'}
                     onClick={() => toggleEpoch(index)}
                     onMouseEnter={() => updateActiveEpoch(index)}
                     onMouseLeave={() => updateActiveEpoch(null)}
@@ -104,6 +123,10 @@ export default connect(
     setTimeSelection: R.compose(
       dispatch,
       setTimeSelection
+    ),
+    setRightPanel: R.compose(
+      dispatch,
+      setRightPanel
     ),
     toggleEpoch: R.compose(
       dispatch,

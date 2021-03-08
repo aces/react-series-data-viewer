@@ -7,6 +7,7 @@ import {boundsReducer} from './state/bounds';
 import {filtersReducer} from './state/filters';
 import {datasetReducer} from './state/dataset';
 import {cursorReducer} from './state/cursor';
+import {panelReducer} from './state/rightPanel';
 import {timeSelectionReducer} from './state/timeSelection';
 import {montageReducer} from './state/montage';
 import {createDragBoundsEpic} from './logic/dragBounds';
@@ -32,6 +33,7 @@ export const rootReducer = combineReducers({
   filters: filtersReducer,
   dataset: datasetReducer,
   cursor: cursorReducer,
+  rightPanel: panelReducer,
   timeSelection: timeSelectionReducer,
   montage: montageReducer,
 });
