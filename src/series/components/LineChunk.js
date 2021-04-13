@@ -29,7 +29,7 @@ const LineMemo = R.memoizeWith(
         .domain(interval)
         .range([-0.5, 0.5]),
       scaleLinear()
-        .domain(seriesRange.map((x) => (x * amplitudeScale)))
+        .domain(seriesRange.map((x) => x * amplitudeScale))
         .range([-0.5, 0.5]),
     ];
 

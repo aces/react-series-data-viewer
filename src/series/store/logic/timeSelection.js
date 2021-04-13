@@ -59,7 +59,10 @@ export const createTimeSelectionEpic = (fromState: any => any) => (
     ofType(END_DRAG_SELECTION),
     Rx.withLatestFrom(state$),
     Rx.map(([payload, state]) => {
-      if (state.timeSelection && state.timeSelection[1] - state.timeSelection[0] < 2) {
+      if (
+        state.timeSelection
+        && (state.timeSelection[1] - state.timeSelection[0] < 2)
+      ) {
         return setTimeSelection(null);
       } else {
         return setTimeSelection(state.timeSelection);

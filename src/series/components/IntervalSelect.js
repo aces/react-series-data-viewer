@@ -112,32 +112,32 @@ const IntervalSelect = ({
 
   return (
     <div className='row'>
-      <div
-        className='col-xs-2'
+      <h5
+        className='col-xs-offset-1 col-xs-11'
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          color: '#064785',
+          fontWeight: 'bold',
+          paddingLeft: '15px',
+          marginBottom: '10px',
         }}
       >
-        <strong
-          style={{
-            fontWeight: 'bold',
-            marginBottom: '5px',
-          }}
-        >Timeline range view</strong>
+        Timeline Range View
         <input
-          type='button'
-          className='btn btn-primary btn-xs'
-          onClick={() => {
-            setInterval([domain[0], domain[1]]);
-            updateFilteredEpochs();
-          }}
-          value='Reset'
-        />
-      </div>
-      <div className='col-xs-10' style={{height: viewerHeight}} ref={getNode}>
+            type='button'
+            className='btn btn-primary btn-xs'
+            onClick={() => {
+              setInterval([domain[0], domain[1]]);
+              updateFilteredEpochs();
+            }}
+            value='Reset'
+            style={{marginLeft: '15px'}}
+          />
+      </h5>
+      <div
+        className='col-xs-offset-1 col-xs-11'
+        style={{height: viewerHeight}}
+        ref={getNode}
+      >
         <ResponsiveViewer
           mouseDown={(v) => {
             document.addEventListener('mousemove', onMouseMove);

@@ -19,6 +19,7 @@ import {setOffsetIndex} from '../store/logic/pagination';
 import IntervalSelect from './IntervalSelect';
 import EventManager from './EventManager';
 import AnnotationForm from './AnnotationForm';
+import Panel from 'jsx/Panel';
 
 import {
   setAmplitudesScale,
@@ -108,6 +109,8 @@ const SeriesRenderer = ({
   dragEnd,
   limit,
 }: Props) => {
+  if (channels.length === 0) return null;
+
   useEffect(() => {
     setViewerHeight(viewerHeight);
   }, [viewerHeight]);
@@ -216,7 +219,8 @@ const SeriesRenderer = ({
       <Group top={-viewerHeight/2} left={-viewerWidth/2}>
         <line y1="0" y2={viewerHeight} stroke="black" />
         {filteredChannels.map((channel, i) => {
-          const seriesRange = channelMetadata[channel.index].seriesRange;
+          const seriesRange = channelMetadata[channel.index]?.seriesRange;
+          if (!seriesRange) return null;
           return (
             <Axis
               key={`${channel.index}`}
@@ -324,23 +328,23 @@ const SeriesRenderer = ({
   };
 
   return (
-    <>
+    <Panel
+      id='channel-viewer'
+      title={'Channel and Epoch Viewer'}
+    >
       {channels.length > 0 ? (
         <>
           <div className='row'>
             <div className={rightPanel ? 'col-xs-10' : 'col-xs-12'}>
               <IntervalSelect />
               <div className='row'>
-                <div className='col-xs-2'/>
-                <div className='col-xs-10'>
+                <div className='col-xs-offset-1 col-xs-11'>
                   <div
                     className='row'
-                    style={{paddingTop: '10px', paddingBottom: '10px'}}
+                    style={{paddingTop: '20px', paddingBottom: '15px'}}
                   >
-                    <div className='col-xs-6'>
-                      <div
-                        className='btn-group'
-                      >
+                    <div className='col-xs-8'>
+                      <div className='btn-group'>
                         <input
                           type='button'
                           style={{width: '25px'}}
@@ -352,7 +356,7 @@ const SeriesRenderer = ({
                           type='button'
                           className='btn btn-primary btn-xs'
                           onClick={() => resetAmplitudesScale()}
-                          value='Reset'
+                          value='Reset Amplitude'
                         />
                         <input
                           type='button'
@@ -377,7 +381,9 @@ const SeriesRenderer = ({
                             </span>
                           </div>
                           <div className="pull-right">
-                            <span className="glyphicon glyphicon-menu-down"></span>
+                            <span
+                              className="glyphicon glyphicon-menu-down"
+                            ></span>
                           </div>
                         </button>
                         <ul className="dropdown-menu">
@@ -408,7 +414,9 @@ const SeriesRenderer = ({
                             </span>
                           </div>
                           <div className="pull-right">
-                            <span className="glyphicon glyphicon-menu-down"></span>
+                            <span
+                              className="glyphicon glyphicon-menu-down"
+                            ></span>
                           </div>
                         </button>
                         <ul className="dropdown-menu">
@@ -424,32 +432,58 @@ const SeriesRenderer = ({
                         </ul>
                       </div>
                     </div>
+
                     <div
-                      className='col-xs-6'
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                      }}
+                      className='col-xs-4'
+                      style={{textAlign: 'right'}}
                     >
-                      {filteredEpochs.length >= MAX_RENDERED_EPOCHS &&
+                      <small style={{marginRight: '10px'}}>
+                        Showing{' '}
+                        <input
+                          type='number'
+                          style={{width: '55px'}}
+                          value={offsetIndex}
+                          onChange={(e) => setOffsetIndex(e.target.value)}
+                        />
+                        {' '}
+                        to {hardLimit} of {channelMetadata.length}
+                      </small>
                       <div
-                        style={{
-                          padding: '5px',
-                          background: '#eee',
-                          alignSelf: 'flex-end',
-                        }}
+                        className='btn-group'
+                        style={{marginRight: 0}}
                       >
-                        Too many events to display for the timeline range.
-                        Limit the time range.
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex - limit)}
+                          value='<<'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex - 1)}
+                          value='<'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex + 1)}
+                          value='>'
+                        />
+                        <input
+                          type='button'
+                          className='btn btn-primary btn-xs'
+                          onClick={() => setOffsetIndex(offsetIndex + limit)}
+                          value='>>'
+                        />
                       </div>
-                      }
                     </div>
                   </div>
                 </div>
               </div>
               <div className='row'>
                 <div
-                  className='col-xs-2'
+                  className='col-xs-1'
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -472,7 +506,7 @@ const SeriesRenderer = ({
                   ))}
                 </div>
                 <div
-                  className='col-xs-10'
+                  className='col-xs-11'
                   onMouseLeave={() => setCursor(null)}
                 >
                   <div style={{position: 'relative'}}>
@@ -518,82 +552,74 @@ const SeriesRenderer = ({
                   marginBottom: '25px',
                 }}
               >
-                <div className='col-xs-2'></div>
-                <div className='col-xs-10'>
+                <div className='col-xs-offset-1 col-xs-11'>
+                  {/*
                   <button
-                    className={'btn btn-primary btn-xs' + (rightPanel === 'annotationForm' ? ' active' : '')}
+                    className={'btn btn-primary btn-xs'
+                      + (rightPanel === 'annotationForm' ? ' active' : '')
+                    }
                     onClick={() => {
                       rightPanel === 'annotationForm'
                         ? setRightPanel(null)
                         : setRightPanel('annotationForm');
                     }}
                   >
-                    {rightPanel === 'annotationForm' ? 'Close Annotation form' : 'New Annotation'}
+                    {rightPanel === 'annotationForm'
+                      ? 'Close Annotation form'
+                      : 'New Annotation'
+                    }
                   </button>
-                  <button
-                    className={'btn btn-primary btn-xs' + (rightPanel === 'epochList' ? ' active' : '')}
-                    onClick={() => {
-                      rightPanel === 'epochList'
-                        ? setRightPanel(null)
-                        : setRightPanel('epochList');
-                    }}
-                  >
-                    {rightPanel === 'epochList' ? 'Hide Epoch Panel' : 'Show Epoch Panel'}
-                  </button>
-
-                  <div className='pull-right'>
-                    <small
-                      style={{
-                        display: 'inline-block',
-                        whiteSpace: 'nowrap',
-                        marginRight: '10px',
+                  */}
+                  {epochs.length > 0 &&
+                    <button
+                      className={
+                        'btn btn-primary'
+                        + (rightPanel === 'epochList' ? ' active' : '')
+                      }
+                      onClick={() => {
+                        rightPanel === 'epochList'
+                          ? setRightPanel(null)
+                          : setRightPanel('epochList');
                       }}
                     >
-                      Showing{' '}
-                      <input
-                        type='number'
-                        style={{width: '55px'}}
-                        value={offsetIndex}
-                        onChange={(e) => setOffsetIndex(e.target.value)}
-                      />
-                      {' '}
-                      to {hardLimit} of {channelMetadata.length}
-                    </small>
-                    <div
-                      className='btn-group'
-                      style={{marginRight: 0}}
-                    >
-                      <input
-                        type='button'
-                        className='btn btn-primary btn-xs'
-                        onClick={() => setOffsetIndex(offsetIndex - limit)}
-                        value='<<'
-                      />
-                      <input
-                        type='button'
-                        className='btn btn-primary btn-xs'
-                        onClick={() => setOffsetIndex(offsetIndex - 1)}
-                        value='<'
-                      />
-                      <input
-                        type='button'
-                        className='btn btn-primary btn-xs'
-                        onClick={() => setOffsetIndex(offsetIndex + 1)}
-                        value='>'
-                      />
-                      <input
-                        type='button'
-                        className='btn btn-primary btn-xs'
-                        onClick={() => setOffsetIndex(offsetIndex + limit)}
-                        value='>>'
-                      />
-                    </div>
+                      {rightPanel === 'epochList'
+                        ? 'Hide Event Panel'
+                        : 'Show Event Panel'
+                      }
+                    </button>
+                  }
+
+                  <div
+                    className='pull-right'
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    {[...Array(epochs.length).keys()].filter((i) =>
+                        epochs[i].onset + epochs[i].duration > interval[0]
+                        && epochs[i].onset < interval[1]
+                      ).length >= MAX_RENDERED_EPOCHS &&
+                      <div
+                        style={{
+                          padding: '5px',
+                          background: '#eee',
+                          alignSelf: 'flex-end',
+                        }}
+                      >
+                        Too many events to display for the timeline range.
+                        Limit the time range.
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
             </div>
             {rightPanel &&
-              <div className='col-xs-2'>
+              <div
+                className='col-xs-2'
+                style={{paddingTop: '40px'}}
+              >
                 {rightPanel === 'annotationForm' && <AnnotationForm />}
                 {rightPanel === 'epochList' && <EventManager />}
               </div>
@@ -605,7 +631,7 @@ const SeriesRenderer = ({
           <h4>Loading...</h4>
         </div>
       )}
-    </>
+    </Panel>
   );
 };
 
@@ -619,7 +645,7 @@ SeriesRenderer.defaultProps = {
   hidden: [],
   channelMetadata: [],
   offsetIndex: 1,
-  limit: 6,
+  limit: MAX_CHANNELS,
 };
 
 export default connect(

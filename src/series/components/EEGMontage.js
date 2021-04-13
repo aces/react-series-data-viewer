@@ -8,6 +8,7 @@ import ResponsiveViewer from './ResponsiveViewer';
 import type {Electrode} from '../../series/store/types';
 import {setHidden} from '../../series/store/state/montage';
 import React, {useState} from 'react';
+import Panel from 'jsx/Panel';
 
 type Props = {
   electrodes: Electrode[],
@@ -26,6 +27,8 @@ const EEGMontage = (
     hidden,
     setHidden,
   }: Props) => {
+  if (electrodes.length === 0) return null;
+
   const [angleX, setAngleX] = useState(0);
   const [angleZ, setAngleZ] = useState(0);
   const [drag, setDrag] = useState(false);
@@ -34,6 +37,7 @@ const EEGMontage = (
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
   const [view3D, setView3D] = useState(false);
+  const [selectedElectrode, setSelectedElectrode] = useState(null);
 
   const scale = 1200;
   let scatter3D = [];
@@ -74,7 +78,7 @@ const EEGMontage = (
   };
 
   /**
-   * Calculate the stereographic projection.
+   * Compute the stereographic projection.
    *
    * Given a unit sphere with radius r = 1 and center at The origin.
    * Project the point p = (x, y, z) from the sphere's South pole (0, 0, -1)
@@ -129,13 +133,13 @@ const EEGMontage = (
   const Montage2D = () => (
     <Group>
       <line
-        x1="25" y1="-138"
-        x2="0" y2="-160"
+        x1="25" y1="-135"
+        x2="0" y2="-155"
         stroke="black"
       />
       <line
-        x1="-25" y1="-138"
-        x2="0" y2="-160"
+        x1="-25" y1="-135"
+        x2="0" y2="-155"
         stroke="black"
       />
       <ellipse
@@ -156,7 +160,10 @@ const EEGMontage = (
         fill='white'
       />
       {scatter2D.map((point, i) =>
-        <Group key={i}>
+        <Group
+          className={(selectedElectrode == i ? 'hover ' : '') + 'electrode'}
+          key={i}
+        >
           <circle
             transform='rotate(-90)'
             cx={point.x}
@@ -164,98 +171,121 @@ const EEGMontage = (
             r='8'
             fill='white'
             stroke={color}
-          />
+          >
+            <title>{electrodes[i].name}</title>
+          </circle>
           <text
-            transform={'rotate(-90) rotate(90, ' + point.x + ', ' + point.y + ')'}
+            transform={
+              'rotate(-90) rotate(90, '
+              + point.x
+              + ', '
+              + point.y
+              + ')'
+            }
             x={point.x}
             y={point.y}
             dominantBaseline="central"
             textAnchor="middle"
             fontSize="8px"
-          >{i + 1}</text>
+          >
+            {i + 1}
+            <title>{electrodes[i].name}</title>
+          </text>
         </Group>
         )}
     </Group>
   );
 
   return (
-    <>
-      <div
-        className="row"
-        style={{
-          padding: 0,
-          height: '330px',
-        }}
+    <div className='col-sm-5'>
+      <Panel
+        id='electrode-montage'
+        title={'Electrode Map'}
       >
         <div
-          className={'col-xs-4'}
-          style={{height: '100%'}}
+          className="row"
+          style={{
+            padding: 0,
+            height: '300px',
+          }}
         >
           <div
-            className="list-group"
-            style={{
-              maxHeight: '100%',
-              overflowY: 'scroll',
-              marginBottom: 0,
-            }}
+            className={'col-xs-4'}
+            style={{height: '100%'}}
           >
-            {electrodes.map((electrode, i) => {
-              return (
-                <div
-                  key={i}
-                  className='list-group-item list-group-item-action'
-                  style={{
-                    position: 'relative',
-                  }}
+            <div
+              className="list-group"
+              style={{
+                maxHeight: '100%',
+                overflowY: 'scroll',
+                marginBottom: 0,
+              }}
+            >
+              {electrodes.map((electrode, i) => {
+                return (
+                  <div
+                    key={i}
+                    data-key={i}
+                    className='list-group-item list-group-item-action'
+                    style={{
+                      position: 'relative',
+                    }}
+                    onMouseEnter={(e) => setSelectedElectrode(
+                      e.currentTarget.getAttribute('data-key')
+                    )}
+                    onMouseLeave={(e) => setSelectedElectrode(null)}
+                  >
+                    <small>{i+1}. </small>
+                    <strong
+                      style={{color: 'rgb(7, 71, 133)'}}
+                    >{electrode.name}</strong>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className={'col-xs-8'} style={{height: '100%'}}>
+            {view3D ?
+              <div className={'col-xs-12'} style={{height: '100%'}}>
+                <ResponsiveViewer
+                  mouseMove={dragged}
+                  mouseDown={dragStart}
+                  mouseUp={dragEnd}
+                  mouseLeave={dragEnd}
                 >
-                  <small>{i+1}. </small>
-                  <strong
-                    style={{color: 'rgb(7, 71, 133)'}}
-                  >{electrode.name}</strong>
-                </div>
-              );
-            })}
+                  <Montage3D />
+                </ResponsiveViewer>
+              </div>
+            :
+              <div className={'col-xs-12'} style={{height: '100%'}}>
+                <ResponsiveViewer>
+                  <Montage2D />
+                </ResponsiveViewer>
+              </div>
+            }
+            <div
+              className="btn-group"
+              style={{
+                top: '15px',
+                left: 0,
+                position: 'absolute',
+              }}
+            >
+              <button
+                className={
+                  'btn btn-xs btn-default' + (!view3D ? ' active' : '')
+                }
+                onClick={() =>setView3D(false)}
+              >2D</button>
+              <button
+                className={'btn btn-xs btn-default' + (view3D ? ' active' : '')}
+                onClick={() => setView3D(true)}
+              >3D</button>
+            </div>
           </div>
         </div>
-        <div className={'col-xs-8'} style={{height: '100%'}}>
-          {view3D ?
-            <div className={'col-xs-12'} style={{height: '100%'}}>
-              <ResponsiveViewer
-              mouseMove={dragged}
-              mouseDown={dragStart}
-              mouseUp={dragEnd}
-              mouseLeave={dragEnd}
-              >
-                <Montage3D />
-              </ResponsiveViewer>
-            </div>
-          :
-            <div className={'col-xs-12'} style={{height: '100%'}}>
-              <ResponsiveViewer>
-                <Montage2D />
-              </ResponsiveViewer>
-            </div>
-          }
-          <div
-            className="btn-group"
-            style={{
-              top: '15px',
-              left: 0,
-              position: 'absolute',
-            }}
-          >
-            <button
-              className={'btn btn-xs btn-default' + (!view3D ? ' active' : '')}
-              onClick={() =>setView3D(false)}
-            >2D</button>
-            <button
-              className={'btn btn-xs btn-default' + (view3D ? ' active' : '')}
-              onClick={() => setView3D(true)}
-            >3D</button>
-          </div>
-        </div>
-      </div>
-    </>
+      </Panel>
+    </div>
   );
 };
 

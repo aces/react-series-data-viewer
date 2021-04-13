@@ -5,6 +5,7 @@ import {createAction} from 'redux-actions';
 import type {Channel, ChannelMetadata, Epoch} from '../types';
 import type {Action as ChannelAction} from './channel';
 import {channelReducer} from './channel';
+import {MAX_CHANNELS} from '../../../vector';
 
 export const SET_CHANNELS = 'SET_CHANNELS';
 export const setChannels = createAction(SET_CHANNELS);
@@ -68,7 +69,7 @@ export const datasetReducer = (
     filteredEpochs: [],
     activeEpoch: null,
     offsetIndex: 1,
-    limit: 6,
+    limit: MAX_CHANNELS,
     shapes: [],
     timeInterval: [0, 1],
     seriesRange: [-1, 2],

@@ -81,7 +81,12 @@ const AnnotationForm = ({
                 setEvent([value, event[1]]);
 
                 if (validate([value, event[1]])) {
-                  setTimeSelection([parseInt(value) || null, parseInt(event[1]) || null]);
+                  setTimeSelection(
+                    [
+                      parseInt(value) || null,
+                      parseInt(event[1]) || null,
+                    ]
+                  );
                 }
               }}
               value={event[0]}

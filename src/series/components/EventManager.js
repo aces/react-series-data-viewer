@@ -56,7 +56,7 @@ const EventManager = ({
           <div
             className="list-group"
             style={{
-              maxHeight: '435px',
+              maxHeight: '510px',
               overflowY: 'scroll',
               marginBottom: 0,
             }}
@@ -67,10 +67,14 @@ const EventManager = ({
             ).map((index) => {
               const epoch = epochs[index];
               const visible = filteredEpochs.includes(index);
+
               return (
                 <div
                   key={index}
-                  className={(epoch.type == 'Annotation' ? 'annotation ' : '') + 'list-group-item list-group-item-action'}
+                  className={
+                    (epoch.type == 'Annotation' ? 'annotation ' : '')
+                    + 'list-group-item list-group-item-action'
+                  }
                   style={{
                     position: 'relative',
                   }}
@@ -79,8 +83,6 @@ const EventManager = ({
                   {epoch.onset}{epoch.duration > 0
                   && ' - ' + (epoch.onset + epoch.duration)}
                   <button
-                    data-toggle="button"
-                    aria-pressed={visible}
                     type="button"
                     className={(visible ? '' : 'active ')
                       + 'btn btn-xs btn-primary'}
@@ -94,7 +96,10 @@ const EventManager = ({
                       display: 'block',
                     }}
                   >
-                    <i className={'glyphicon glyphicon-eye-' + (visible ? 'open' : 'close')}></i>
+                    <i className={
+                      'glyphicon glyphicon-eye-'
+                      + (visible ? 'open' : 'close')
+                    }></i>
                   </button>
                 </div>
               );

@@ -1,8 +1,3 @@
-# React series data viewer
-
-Previous versions were implemented with a combination of svg (D3) and WebGL renderer (Three.js). 
-Since #5c00801, the Series data viewer strictly uses svg (Visx|D3), to use features like clipPath (significantly simpler to use than Three.js masks) and css styling.
-
 ## Main dependencies
 
 ### Ramda (https://ramdajs.com)
@@ -20,3 +15,7 @@ It provides one core type, the Observable, satellite types (Observer, Schedulers
 
 ### flow (https://flow.org)
 A static type checker for javascript.
+
+### Protocol Buffers (https://developers.google.com/protocol-buffers)
+To install the Protocol Buffers Compiler (protoc), run:
+`apt install -y protobuf-compiler`

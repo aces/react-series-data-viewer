@@ -6,6 +6,7 @@ import * as Rx from 'rxjs/operators';
 import {ofType} from 'redux-observable';
 import {createAction} from 'redux-actions';
 import {setFilteredEpochs, setActiveEpoch} from '../state/dataset';
+import {MAX_RENDERED_EPOCHS} from '../../../vector';
 
 export const UPDATE_FILTERED_EPOCHS = 'UPDATE_FILTERED_EPOCHS';
 export const updateFilteredEpochs = createAction(UPDATE_FILTERED_EPOCHS);
@@ -28,11 +29,15 @@ export const createFilterEpochsEpic = (fromState: any => any) => (
     Rx.withLatestFrom(state$),
     Rx.map(([payload, state]) => {
       const {interval, epochs} = fromState(state);
-      const newFilteredEpochs = [...Array(epochs.length).keys()]
+      let newFilteredEpochs = [...Array(epochs.length).keys()]
         .filter((index) =>
           epochs[index].onset + epochs[index].duration > interval[0]
           && epochs[index].onset < interval[1]
         );
+
+      if (newFilteredEpochs.length >= MAX_RENDERED_EPOCHS) {
+        newFilteredEpochs = [];
+      }
 
       return (dispatch) => {
         dispatch(setFilteredEpochs(newFilteredEpochs));

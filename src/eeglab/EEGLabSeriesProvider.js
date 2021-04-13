@@ -6,6 +6,7 @@ import {createEpicMiddleware} from 'redux-observable';
 import thunk from 'redux-thunk';
 import {fetchJSON, fetchText} from '../ajax';
 import {rootReducer, rootEpic} from '../series/store';
+import {MAX_CHANNELS} from '../vector';
 import {
   setChannels,
   setEpochs,
@@ -52,7 +53,7 @@ class EEGLabSeriesProvider extends Component {
     const epochUrls =
       epochsTableURLs instanceof Array ? epochsTableURLs : [epochsTableURLs];
 
-    const electrodesUrls =
+    const electrodeUrls =
       electrodesTableUrls instanceof Array
         ? electrodesTableUrls
         : [electrodesTableUrls];
@@ -94,7 +95,7 @@ class EEGLabSeriesProvider extends Component {
               .map(({onset, duration, label}, i) => ({
                 onset: parseFloat(onset),
                 duration: parseFloat(duration),
-                type: i%5 == 0 ? 'Annotation' : 'Event',
+                type: 'Event',
                 label: label,
                 comment: null,
                 channels: 'all',
@@ -105,19 +106,23 @@ class EEGLabSeriesProvider extends Component {
       })
     );
 
-    Promise.race(racers(fetchText, electrodesUrls)).then((text) => {
-      if (!(typeof text.json === 'string'
-        || text.json instanceof String)) return;
-      this.store.dispatch(
-        setElectrodes(
-          tsvParse(text.json).map(({name, x, y, z}) => ({
-            name: name,
-            channelIndex: null,
-            position: [parseFloat(x), parseFloat(y), parseFloat(z)],
-          }))
-        )
-      );
-    });
+    Promise.race(racers(fetchText, electrodeUrls))
+      .then((text) => {
+        if (!(typeof text.json === 'string'
+          || text.json instanceof String)) return;
+        this.store.dispatch(
+          setElectrodes(
+            tsvParse(text.json).map(({name, x, y, z}) => ({
+              name: name,
+              channelIndex: null,
+              position: [parseFloat(x), parseFloat(y), parseFloat(z)],
+            }))
+          )
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   /**
@@ -131,7 +136,7 @@ class EEGLabSeriesProvider extends Component {
 }
 
 EEGLabSeriesProvider.defaultProps = {
-  limit: 6,
+  limit: MAX_CHANNELS,
 };
 
 export default EEGLabSeriesProvider;
